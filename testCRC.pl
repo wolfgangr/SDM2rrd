@@ -59,7 +59,7 @@ sub number2bytes {
   while ( $bytes > 0 ) {
     push ( @res, ($number & 0xff) );
     $bytes-- ;
-    $number <<= 16 ;
+    $number >>= 16 ;
   }
   return reverse @res ;
 }
@@ -70,9 +70,26 @@ sub number2bytes {
 # returns list of 2 bytes in array
 sub modbusCRC {
   my $ary = shift @_;
-  my $ctx = Digest::CRC->new(width=>16, init=>0xffff, poly=>0x18005) ;
+  my $ctx = Digest::CRC->new(width=>16 , init=>0xffff, poly=>0x18005) ;
   foreach my $x ( @$ary ) {
-    $ctx->add ($x) ;
+    $ctx->add (chr $x) ;
   }
-  return $digest = $ctx->digest;
+  return  ($ctx->digest) ;
 }
+
+
+sub mymodbusCRC {
+  my $ary = shift @_;
+  my $crc = 0xffff;
+  foreach my $x ( @$ary ) {
+    # $ctx->add ($x) ;
+    foreach my $i (8 .. 1) {
+      if ($x & 0x01 ) { $crc ^= 0xA001 ; }
+      $x >>= 1;      
+    }
+  }
+  # return number2bytes ( $crc, 2 ) ;
+  return $crc ;
+}
+
+
