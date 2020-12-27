@@ -21,14 +21,17 @@ push  @tosend, $device, $cmd ;
 push  @tosend , number2bytes ( $startadd , 2);
 push  @tosend , number2bytes ( $numdata , 2);
 
+my @digest = modbusCRC ( \@tosend );
+push  @tosend , @digest ;
+
 
 print Dumper (@tosend) ;
 
 debug_hexdump ( \@tosend ) ;
 print "\n";
 
-my $digest = modbusCRC ( \@tosend );
-print Dumper ( $digest );
+# my @digest = modbusCRC ( \@tosend );
+# print Dumper ( @digest );
 
 exit;
 
@@ -59,7 +62,7 @@ sub number2bytes {
   while ( $bytes > 0 ) {
     push ( @res, ($number & 0xff) );
     $bytes-- ;
-    $number >>= 16 ;
+    $number >>= 8 ;
   }
   return reverse @res ;
 }
@@ -74,7 +77,7 @@ sub modbusCRC {
   foreach my $x ( @$ary ) {
     $ctx->add ( chr $x) ;
   }
-  return  ($ctx->hexdigest) ;
+  return  reverse number2bytes ($ctx->digest, 2) ;
 }
 
 
