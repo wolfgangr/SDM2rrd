@@ -7,7 +7,7 @@ use strict ;
 use Data::Dumper ;
 use Digest::CRC ;
 
-my $device = 0x08;
+my $device = 0x01;
 my $cmd = 0x04;
 my $startadd = 0;
 my $numdata = 76 ; # aka 0x4c
