@@ -5,7 +5,7 @@
 use warnings ;
 use strict ;
 use Data::Dumper ;
-
+use Digest::CRC ;
 
 my $device = 0x01;
 my $cmd = 0x04;
@@ -27,7 +27,8 @@ print Dumper (@tosend) ;
 debug_hexdump ( \@tosend ) ;
 print "\n";
 
-
+my $digest = modbusCRC ( \@tosend );
+print Dumper ( $digest );
 
 exit;
 
@@ -37,7 +38,7 @@ sub debug_hexdump {
     # my $level = shift @_;
     # return unless ( $level <= $debug) ;
     my $ary = shift @_;
-    print Dumper ($ary );
+    # print Dumper ($ary );
     foreach my $x ( @$ary ) {
       printf   ( " %02x", $x );
     }
@@ -61,6 +62,17 @@ sub number2bytes {
     $number <<= 16 ;
   }
   return reverse @res ;
-  
+}
 
+
+# sub modbusCRC ( \@data )
+# accepts an array of byte data
+# returns list of 2 bytes in array
+sub modbusCRC {
+  my $ary = shift @_;
+  my $ctx = Digest::CRC->new(width=>16, init=>0xffff, poly=>0x18005) ;
+  foreach my $x ( @$ary ) {
+    $ctx->add ($x) ;
+  }
+  return $digest = $ctx->digest;
 }
