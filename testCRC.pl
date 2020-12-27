@@ -30,6 +30,9 @@ print Dumper (@tosend) ;
 debug_hexdump ( \@tosend ) ;
 print "\n";
 
+my $sendstring = array2string ( @tosend ) ;
+print str_hexdump ($sendstring );
+
 # my @digest = modbusCRC ( \@tosend );
 # print Dumper ( @digest );
 
@@ -47,10 +50,24 @@ sub debug_hexdump {
     }
 }
 
+
+
 # hexdump  of a string
 sub str_hexdump { 
   my $res = `xxd $_[0]` ;
   return $res;
+}
+
+
+# convert array of bytes to string
+# array2string ( @bytes) )
+sub array2string {
+	my $rv;
+	while (defined $_) {
+		$rv .= chr $_ ;
+		shift ;
+	}
+	return $rv
 }
 
 # convert number to hex bytes of give lengts, return als array of numbers
