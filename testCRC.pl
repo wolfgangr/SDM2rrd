@@ -7,7 +7,7 @@ use strict ;
 use Data::Dumper ;
 use Digest::CRC ;
 
-my $device = 0x01;
+my $device = 0x08;
 my $cmd = 0x04;
 my $startadd = 0;
 my $numdata = 76 ; # aka 0x4c
@@ -70,11 +70,11 @@ sub number2bytes {
 # returns list of 2 bytes in array
 sub modbusCRC {
   my $ary = shift @_;
-  my $ctx = Digest::CRC->new(width=>16 , init=>0xffff, poly=>0x18005) ;
+  my $ctx = Digest::CRC->new(width=>16 , init=>0xffff, poly=>0x8005 , refin => 1, refout => 1) ;
   foreach my $x ( @$ary ) {
-    $ctx->add (chr $x) ;
+    $ctx->add ( chr $x) ;
   }
-  return  ($ctx->digest) ;
+  return  ($ctx->hexdigest) ;
 }
 
 
