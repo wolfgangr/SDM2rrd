@@ -31,7 +31,9 @@ debug_hexdump ( \@tosend ) ;
 print "\n";
 
 my $sendstring = array2string ( @tosend ) ;
-print str_hexdump ($sendstring );
+# print (Dumper ($sendstring )) ;
+
+print str_hexdump($sendstring);
 
 # my @digest = modbusCRC ( \@tosend );
 # print Dumper ( @digest );
@@ -54,7 +56,8 @@ sub debug_hexdump {
 
 # hexdump  of a string
 sub str_hexdump { 
-  my $res = `xxd $_[0]` ;
+  my $str = shift ;
+  my $res = `echo $str | xxd ` ;
   return $res;
 }
 
@@ -63,9 +66,9 @@ sub str_hexdump {
 # array2string ( @bytes) )
 sub array2string {
 	my $rv;
-	while (defined $_) {
+	while (defined ($_ = shift) ) {
 		$rv .= chr $_ ;
-		shift ;
+		# shift ;
 	}
 	return $rv
 }
