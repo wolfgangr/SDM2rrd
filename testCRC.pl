@@ -6,7 +6,8 @@ use warnings ;
 use strict ;
 use Data::Dumper ;
 use Digest::CRC ;
-use Socket;
+# use Socket;
+use IO::Socket;
 
 
 my $remoteport = 502 ;
@@ -31,7 +32,7 @@ my @digest = modbusCRC ( \@tosend );
 push  @tosend , @digest ;
 
 
-print Dumper (@tosend) ;
+# print Dumper (@tosend) ;
 
 debug_hexdump ( \@tosend ) ;
 print "\n";
@@ -44,19 +45,47 @@ print str_hexdump($sendstring);
 
 # https://www.tutorialspoint.com/perl/perl_socket_programming.htm
 
-my $iaddr   = inet_aton($remotehost)       || die "no host: $remotehost";
-my $paddr   = sockaddr_in($remoteport, $iaddr);
-my $proto   = getprotobyname("tcp");
-socket(my $sock, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
-connect($sock, $paddr)              || die "connect: $!";
+# my $iaddr   = inet_aton($remotehost)       || die "no host: $remotehost";
+# my $paddr   = sockaddr_in($remoteport, $iaddr);
+# my $proto   = getprotobyname("tcp");
+# socket(my $sock, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
+# connect($sock, $paddr)              || die "connect: $!";
 
 
 # socket( SOCKET, pack_sockaddr_in($remoteport, inet_aton($remotehost)))
 #    or die "Can't bind to port $remoteport at host $remotehost\n Reason:  $! \n";
 
+
+my $EOL = "\015\012";
+
+my $sock = IO::Socket::INET->new( Proto     => "tcp",
+                                  PeerAddr  => $remotehost,
+                                  PeerPort  => $remoteport,
+           )     || die "cannot connect to port $remoteport on $remotehost";
+$sock->autoflush(1);
+
 print "-- connected ---\n";
 
+print $sock $sendstring ;
+# my $response = <$sock> ;
 
+my $response ;
+my $byte;
+# while (sysread($sock, $byte, 1) == 1) {
+#	# print STDOUT $byte;
+#	$response .= $byte ;
+#	print str_hexdump($response);
+#
+#}
+# print "loop ended ---- \n";
+
+if (read($sock, $response, 157)) {
+	# print str_hexdump($response);
+	my @response = string2array ($response);
+	print debug_hexdump( \@response) , "\n";
+} else {
+  print "nada\n";
+}
 
 exit;
 
@@ -92,6 +121,13 @@ sub array2string {
 	}
 	return $rv
 }
+
+# ... the other way round ...
+sub string2array {
+	my $str = shift;
+	return map (ord, split ("", $str)); 
+}
+
 
 # convert number to hex bytes of give lengts, return als array of numbers
 # sub ( $number, $bytes )
