@@ -79,17 +79,39 @@ my $byte;
 #}
 # print "loop ended ---- \n";
 
-if (read($sock, $response, 157)) {
-	# print str_hexdump($response);
-	my @response = string2array ($response);
-	print debug_hexdump( \@response) , "\n";
-} else {
-  print "nada\n";
-}
+(read($sock, $response, 157))  or die "not enought data received";
+
+# print str_hexdump($response);
+my @response = string2array ($response);
+print debug_hexdump( \@response) , "\n";
+
+my @unpacked = unpack ( 'H2' x 3 . 'N' x 38 . 'H4' , $response ); 
+
+print Dumper (\@unpacked);
+
+my @floats = map { decodeIEE754($_) } @unpacked[3..40] ;
+print Dumper (\@floats);
+
+
+
+
+
+
 
 exit;
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# decodeIEE754
+sub decodeIEE754 {
+  my $word = shift;
+  return 0 unless $word;
+  my $sign = ($word & 0x80000000) ? -1 : 1;
+  my $expo = (($word & 0x7F800000) >> 23) - 127;
+  my $mant = ($word & 0x007FFFFF | 0x00800000);
+  return  $sign * (2 ** $expo) * ( $mant / (1 << 23));
+}
 
 # hexdump, pass array by ref
 sub debug_hexdump {
