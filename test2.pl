@@ -14,7 +14,7 @@ my $remoteport = 502 ;
 # my $remotehost = "192.168.1.241";
 my $remotehost = "USR-TCP-stromz.rosner.lokal"; 
 
-my $device = 0x06;
+my $device = 0x01;
 my $cmd = 0x04;
 my $startadd = 0;
 my $numdata = 76 ; # aka 0x4c
