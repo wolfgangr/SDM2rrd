@@ -20,7 +20,7 @@ require ('./extract-SDM-def.pl');
 
 our %Counterlist;
 
-$counterlist{'mains'} = (
+$Counterlist{'mains'} = (
 	bus => 'MODBUS-infini',
 	ID =>  1,
 	Label => 'Hausanschluss',
@@ -28,7 +28,7 @@ $counterlist{'mains'} = (
 	selectors => [ $foo,  $bar ] ,
 );
 
-$counterlist{'subs1'} = (
+$Counterlist{'subs1'} = (
         bus => 'tcp-241',
         ID =>  1,
         Label => 'Wohnhaus neu',
@@ -36,7 +36,7 @@ $counterlist{'subs1'} = (
 	selectors => [ ] ,
 );
 
-$counterlist{'subs2'} = (
+$Counterlist{'subs2'} = (
         bus => 'tcp-241',
         ID =>  2,
         Label => 'Wohnhaus alt',
@@ -44,7 +44,7 @@ $counterlist{'subs2'} = (
         selectors => [ ] ,
 );
 
-$counterlist{'subs3'} = (
+$Counterlist{'subs3'} = (
         bus => 'tcp-241',
         ID =>  3,
         Label => 'Stall + Werkstatt',
@@ -52,7 +52,7 @@ $counterlist{'subs3'} = (
         selectors => [ ] ,
 );
 
-$counterlist{'subs4'} = (
+$Counterlist{'subs4'} = (
         bus => 'tcp-241',
         ID =>  4,
         Label => 'Kartoffellager',
@@ -60,7 +60,7 @@ $counterlist{'subs4'} = (
         selectors => [ ] ,
 );
 
-$counterlist{'subs5'} = (
+$Counterlist{'subs5'} = (
         bus => 'tcp-241',
         ID =>  5,
         Label => 'Heizung',
@@ -68,7 +68,7 @@ $counterlist{'subs5'} = (
         selectors => [ ] ,
 );
 
-$counterlist{'subs6'} = (
+$Counterlist{'subs6'} = (
         bus => 'tcp-241',
         ID =>  6,
         Label => 'Infini-LTO',
