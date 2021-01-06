@@ -18,22 +18,27 @@ our $sdm_def_file = "SDM630proto-usage.csv" ;
 # our %SDM_reg_by_tag =();  	# for human readable direct access
 # our %SDM_selectors =();		# indexed by selector / number => tag
 
-my $SDM_regs =( read_csv_SDM_def ( $sdm_def_file ));
+my ($SDM_regs , $SDM_reg_by_tag , $SDM_selectors)  =( read_csv_SDM_def ( $sdm_def_file ));
 # my $SDM_reg_by_tag = reg_by_tag ( $SDM_regs);
 # my $SDM_selectors = tag_by_selector ( $SDM_regs);
 
-# debug_dumper ( 3, $SDM_regs, $SDM_reg_by_tag , $SDM_selectors );
+debug_dumper ( 3, $SDM_regs, $SDM_reg_by_tag , $SDM_selectors );
 
-debug_dumper ( 3, $SDM_regs,);
+# debug_dumper ( 3, $SDM_regs,);
 
 exit;
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+# \@SDM_regs = read_csv_SDM_def ( $csv_file_name )
+#
 sub read_csv_SDM_def { 
   my $filename = shift;
   open (my $IN, '<', $filename) or die "cannot open $filename : $!";
 
   my @regs;
+  my %reg_by_tag ;
+  my %selectors ;
   while (<$IN>) {
 
 	next if /^#/ ;
@@ -56,7 +61,7 @@ sub read_csv_SDM_def {
 	push @regs, \@subset ;
   }
   close $filename;
-  return \@regs;
+  return (\@regs,  \%reg_by_tag , \%selectors )  ;
 }
 
 
