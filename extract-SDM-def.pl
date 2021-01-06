@@ -5,7 +5,10 @@ use warnings;
 use strict;
 use Data::Dumper  qw(Dumper);
 
-my $Debug = 3;
+our $Debug = 2;
+require ('./my_debugs.pl');
+
+
 my $sdm_def_file = "SDM630proto-usage.csv" ;
 open (my $IN, '<', $sdm_def_file) or die "cannot open $sdm_def_file : $!";
 
@@ -52,23 +55,6 @@ while (<$IN>) {
 }
 
 debug_dumper ( 3, \@SDM_regs, \%SDM_reg_by_tag , \%SDM_selectors );
-
+1;
 exit;
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# debug_print($level, $content)
-sub debug_print {
-  my $level = shift @_;
-  print STDERR @_ if ( $level <= $Debug) ;
-}
-
-sub debug_printf {
-  my $level = shift @_;
-  printf STDERR  @_ if ( $level <= $Debug) ;
-}
-
-sub debug_dumper {
-  my $level = shift @_;
-  print STDERR (Data::Dumper->Dump( \@_ )) if ( $level <= $Debug) ;
-}
 
