@@ -17,6 +17,7 @@ usage: $0 [ options ]
   -l		list counters and rrds
 
   -v level	set verbosity level
+  -q		suppress explaining output
   -h		print this message
   
 EOF_USAGE
@@ -38,9 +39,9 @@ require ('./my_debugs.pl');
 
 
 
-my $retval = getopts('Dtfasd:p:c:r:lv:h');
+my $retval = getopts('Dtfasd:p:c:r:lv:qh');
 our ( $opt_D , $opt_t , $opt_f , $opt_a , $opt_s,  $opt_d , $opt_p , 
-	$opt_c , $opt_r , $opt_l , $opt_v , $opt_h , ) ; 
+	$opt_c , $opt_r , $opt_l , $opt_v , $opt_q, $opt_h , ) ; 
 
 die "$usage" unless ($retval) ;
 die "$usage" if  $opt_h  ;
@@ -82,10 +83,17 @@ if ($opt_l) {
 }
 
 foreach my $counter (@counters) {
-     @rrddefs = @{$Counterlist{ $counter }->{ rrds }};	
+    @rrddefs = @{$Counterlist{ $counter }->{ rrds }};
+    next if ( $opt_c and ( $opt_c ne $counter ));
+         
     foreach my $rrd_d (@rrddefs) {
+      next if ( $opt_r and ( $opt_r ne $rrd_d  ));
+
       my $current_rrd = sprintf ($RRD_sprintf, $RRD_dir, $RRD_prefix , $counter,  $rrd_d );
-      print "  - processing $current_rrd ... \n";
+      print "  - processing $current_rrd ... \n" unless ($opt_q) ;
+      if ($opt_a) { print "    press <ENTER> to continue\n"; <STDIN> ;} 
+      next if ($opt_D) ;
+      die "========= still to do ==========";
   }
 }
 
