@@ -11,12 +11,30 @@ require ('./my_debugs.pl');
 
 # our @SDM_regs =();    		# resembling the raw data for whatever use
 # our %SDM_reg_by_tag =();  	# for human readable direct access
-# our %SDM_selectors =();		# indexed by selector / number => tag
+our %SDM_selectors ;		# indexed by selector / number => tag
 require ('./extract-SDM-def.pm');
 
 
 # $subsetx = [ qw ( foo bar xyz ) ] 
 # but we may extract them from the central definition selectors
+
+our @all_selectors;
+
+foreach my $sel ( sort keys %SDM_selectors ) {
+  # debug_dumper (3, $sel );
+
+  # die "debug" ;
+  my %registers = %{$SDM_selectors{ $sel }} ;
+
+  # debug_dumper (3, \%registers  );
+  # die "debug" ;
+
+  my @sorted_tags = map { $registers{ $_ } } sort keys %registers ;
+  # debug_dumper (3, \@sorted_tags) ;
+  # die "debug" ;
+
+  push @all_selectors, [ @sorted_tags ] ;
+}
 
 our %Counterlist;
 
