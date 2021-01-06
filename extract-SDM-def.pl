@@ -59,6 +59,18 @@ sub read_csv_SDM_def {
 	debug_printf (4, "sel: %d  field: %d, adr: 0x%04x, tag %s, unit %s, \t%s\n", 
 		$selector, $par_no, ($par_no-1)*2, , $tag, $unit, $desc ) ;  
 	push @regs, \@subset ;
+
+	if ($tag) {
+		my %this = ( 
+			par_no	=> $par_no, 
+			desc 	=> $desc,
+			unit	=> $unit,
+			selector => $selector
+		) ;
+		$reg_by_tag{$tag} = \%this ;
+
+		$selectors{$selector}{$par_no}= $tag ;
+	}
   }
   close $filename;
   return (\@regs,  \%reg_by_tag , \%selectors )  ;
