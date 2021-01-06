@@ -12,8 +12,13 @@ require ('./my_debugs.pl');
 our $sdm_def_file = "SDM630proto-usage.csv" ;
 
 
+our $SDM_regs ;
+our $SDM_reg_by_tag ;
+our $SDM_selectors ;
+
 # two line test code and usage guide
-# my ($SDM_regs , $SDM_reg_by_tag , $SDM_selectors)  =( read_csv_SDM_def ( $sdm_def_file ));
+# ( \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors)  = ( read_csv_SDM_def ( $sdm_def_file ));
+($SDM_regs, $SDM_reg_by_tag , $SDM_selectors ) = ( read_csv_SDM_def ( $sdm_def_file ));
 # debug_dumper ( 3, $SDM_regs, $SDM_reg_by_tag , $SDM_selectors );
 
 
