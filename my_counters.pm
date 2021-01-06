@@ -36,7 +36,7 @@ $Counterlist{'mains'} = {
 	Label => 'Hausanschluss',
         # direction => 1,
         # selectors => [ ] ,
-
+	rrds => [ qw( totalP )],
 };
 
 $Counterlist{'subs1'} = {
@@ -75,10 +75,15 @@ $Counterlist{'subs6'} = {
         Label => 'Infini-LTO',
         direction => -1,
 	selectors => [ [ 'Ptot' ]  ] ,
+	rrds	=> [ qw( totalP E_bidir elbasics elquality )],
 };
 
 
 # fill defaults
+
+# elbasics E_unidir totalP elquality E_bidir
+my $default_rrds = [ qw( totalP E_unidir elbasics elquality )] ;
+
 foreach my $counter ( values %Counterlist) {
 
 	unless ( defined $counter->{direction} ) { 
@@ -86,6 +91,9 @@ foreach my $counter ( values %Counterlist) {
 
 	unless ( defined $counter->{selectors} ) { 
 		$counter->{selectors} = \@all_selectors };
+
+	unless ( defined $counter->{rrds} ) {
+		$counter->{rrds} = $default_rrds } ;
 }
 
 

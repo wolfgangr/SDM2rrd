@@ -19,15 +19,17 @@ our %Counterlist;
 our @all_selectors;
 require ('./my_counters.pm');
 
-
+our %RRD_definitions ;
+require ('./rrd_def.pm');
 
 #debug_dumper (3, 
 print Data::Dumper->Dump (
 	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
 	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  );
 
-# print Data::Dumper->Dump ( [ \@all_selectors ]  , [ qw(*all_selectors) ]  );
+print Data::Dumper->Dump ( [ \%RRD_definitions ]  , [ qw(%RRD_definitions) ]  );
 
+print join (' ' , keys %RRD_definitions ), "\n";
 
 
 
