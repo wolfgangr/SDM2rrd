@@ -92,4 +92,14 @@ EOF_EQ_RRA
 # defaults
 # step = 5
 # hb =30
-# rra standard
+
+my $default_step = 5;
+my $default_hb = 30;
+
+foreach my $rrd_def  ( values %RRD_definitions) {
+  unless ( defined $rrd_def->{step}      ) { $rrd_def->{step}      = $default_step ; }
+  unless ( defined $rrd_def->{heartbeat} ) { $rrd_def->{heartbeat} = $default_hb   ; }
+
+}
+
+1;

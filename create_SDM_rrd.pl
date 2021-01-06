@@ -107,8 +107,10 @@ foreach my $counter (@counters) {
 
       # time to do real work
       my $rrd_dhp = $RRD_definitions{$rrd_d} ;
-      my @fields = @{$rrd_dhp->{ fields }} ;
-      my $rradef = $rrd_dhp->{ rradef } ;
+      my @fields  = @{$rrd_dhp->{ fields    }} ;
+      my $rradef    = $rrd_dhp->{ rradef    } ;
+      my $step      = $rrd_dhp->{ step      } ;
+      my $heartbeat = $rrd_dhp->{ heartbeat } ;
 
       print Data::Dumper->Dump ( [ $rrd_dhp, \@fields , $rradef ], 
 	      		[ qw(      *rrd_dhp   *fields   *rradef ) ] );
