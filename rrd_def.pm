@@ -39,17 +39,17 @@ our %RRD_definitions ;
 $RRD_definitions{'totalP'} = {
 	fields => [ qw( Ptot ) ], 
 	rradef => <<"EOF_TOTALP_RRA",
-RRA:AVERAGE:0.5:30s:1m
+RRA:AVERAGE:0.5:30s:1M
 RRA:AVERAGE:0.5:5m:1y
-RRA:MAX:0.5:5m:3m
+RRA:MAX:0.5:5m:3M
 RRA:AVERAGE:0.5:1h:5y
 RRA:MAX:0.5:1h:2y
 EOF_TOTALP_RRA
 } ;
 
 my $simple_E_rra = <<"EOF_SE_RRA",
-RRA:LAST:0.5:30s:1m
-RRA:LAST:0.5:5m:3m
+RRA:LAST:0.5:30s:1M
+RRA:LAST:0.5:5m:3M
 RRA:LAST:0.5:1h:1y
 RRA:LAST:0.5:1d:5y
 EOF_SE_RRA
@@ -68,11 +68,11 @@ $RRD_definitions{'E_unidir'} = {
 $RRD_definitions{'elbasics'} = {
 	fields => [ qw(P1 P2 P3 I1 I2 I3 U1 U2 U3 ) ] ,
 	rradef => <<"EOF_EB_RRA",
-RRA:AVERAGE:0.5:30s:1m
-RRA:AVERAGE:0.5:5m:3m
-RRA:MAX:0.5:5m:1m
+RRA:AVERAGE:0.5:30s:1M
+RRA:AVERAGE:0.5:5m:3M
+RRA:MAX:0.5:5m:1M
 RRA:AVERAGE:0.5:1h:2y
-RRA:MAX:0.5:1h:6m
+RRA:MAX:0.5:1h:6M
 EOF_EB_RRA
 } ; 
 
@@ -81,9 +81,9 @@ $RRD_definitions{'elquality'} = {
 	fields => [ qw(  F   VAr1 VAr2 VAr3 VArtot   thdI1 thdI2 thdI3 thdItot   thdU1 thdU2 thdU3 thdUtot )],
 	rradef => <<"EOF_EQ_RRA",
 RRA:AVERAGE:0.5:30s:10d
-RRA:AVERAGE:0.5:5m:1m
-RRA:AVERAGE:0.5:1h:6m
-RRA:MAX:0.5:1h:6m
+RRA:AVERAGE:0.5:5m:1M
+RRA:AVERAGE:0.5:1h:6M
+RRA:MAX:0.5:1h:6M
 EOF_EQ_RRA
 } ;
 
