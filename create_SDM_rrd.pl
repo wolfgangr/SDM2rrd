@@ -3,7 +3,7 @@
 
 our $usage = <<"EOF_USAGE";
 usage: $0 [ options ]
-  -d		dryrun
+  -D		dryrun
   -t		touch file only
   -f		force_overwrite
   -a		ask before each creation
@@ -37,9 +37,14 @@ require ('./my_debugs.pl');
 
 
 
-my $retval = getopts('dtfad:p:c:r:lv:h');
+my $retval = getopts('Dtfad:p:c:r:lv:h');
+our ( $opt_D , $opt_t , $opt_f , $opt_a , $opt_d , $opt_p , 
+	$opt_c , $opt_r , $opt_l , $opt_v , $opt_h , ) ; 
+
 die "$usage" unless ($retval) ;
-die "$usage" if my $opt_h  ;
+die "$usage" if  $opt_h  ;
+
+# if 
 
 our $sdm_def_file;
 our (@SDM_regs , %SDM_reg_by_tag , %SDM_selectors);
@@ -54,10 +59,9 @@ our ( $RRD_dir , $RRD_prefix , $RRD_sprintf );
 our %RRD_definitions ;
 require ('./rrd_def.pm');
 
-print Data::Dumper->Dump (
-	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
-	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  );
-
+# print Data::Dumper->Dump (
+# 	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
+# 	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  );
 print Data::Dumper->Dump ( [ \%RRD_definitions ]  , [ qw(%RRD_definitions) ]  );
 
 
