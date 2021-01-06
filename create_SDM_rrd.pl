@@ -95,12 +95,23 @@ foreach my $counter (@counters) {
       if ($opt_a) { print "    press <ENTER> to continue\n"; <STDIN> ;} 
       next if ($opt_D) ;
 
+      if ((-e $current_rrd) and ! $opt_f ) {
+	 print "cowardly refusing to overwrite existing file $current_rrd - use [-f] option to override \n";
+	 next;
+      } 
+
       if ($opt_t) {
 	 `touch $current_rrd `;
 	  next ; 
       }
 
+      # time to do real work
+      my $rrd_dhp = $RRD_definitions{$rrd_d} ;
+      my @fields = @{$rrd_dhp->{ fields }} ;
+      my $rradef = $rrd_dhp->{ rradef } ;
 
+      print Data::Dumper->Dump ( [ $rrd_dhp, \@fields , $rradef ], 
+	      		[ qw(      *rrd_dhp   *fields   *rradef ) ] );
 
       die "========= still to do ==========";
   }
