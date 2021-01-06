@@ -1,0 +1,91 @@
+# "Quelle:",,,,,,,"https://www.aggsoft.com/serial-data-logger/tutorials/modbus-data-logging/eastron-sdm630.htm",,,,,,
+# ,,,,,,,"SDM630_MODBUS_Protocol.pdf","V1.8",,,,,
+# ,,,,,,,,,,,,,
+# "MB offs","d","Register","Par","hex","Hi","Lo","Description","Units","Data type","myUnits","will ich","query","tag"
+0,,30001,1,"0000","00","00","Phase 1 line to neutral volts","Volts","single","V","x",1,"U1"
+2,1,30003,2,"0002","00","02","Phase 2 line to neutral volts","Volts","single","V","x",1,"U2"
+4,1,30005,3,"0004","00","04","Phase 3 line to neutral volts","Volts","single","V","x",1,"U3"
+6,1,30007,4,"0006","00","06","Phase 1 current","Amps","single","A","x",1,"I1"
+8,1,30009,5,"0008","00","08","Phase 2 current","Amps","single","A","x",1,"I2"
+10,1,30011,6,"000A","00","0A","Phase 3 current","Amps","single","A","x",1,"I3"
+12,1,30013,7,"000C","00","0C","Phase 1 power","Watts","single","W","x",1,"P1"
+14,1,30015,8,"000E","00","0E","Phase 2 power","Watts","single","W","x",1,"P2"
+16,1,30017,9,"0010","00","10","Phase 3 power","Watts","single","W","x",1,"P3"
+18,1,30019,10,"0012","00","12","Phase 1 volt amps","VoltAm ps","single","VA",,,
+20,1,30021,11,"0014","00","14","Phase 2 volt amps","VoltAm ps","single","VA",,,
+22,1,30023,12,"0016","00","16","Phase 3 volt amps","VoltAm ps","single","VA",,,
+24,1,30025,13,"0018","00","18","Phase 1 volt amps reactive","VAr","single","VAr","x",1,"VAr1"
+26,1,30027,14,"001A","00","1A","Phase 2 volt amps reactive","VAr","single","VAr","x",1,"VAr2"
+28,1,30029,15,"001C","00","1C","Phase 3 volt amps reactive","VAr","single","VAr","x",1,"VAr3"
+30,1,30031,16,"001E","00","1E","Phase 1 power factor (1)","None","single",,,,
+32,1,30033,17,"0020","00","20","Phase 2 power factor (1)","None","single",,,,
+34,1,30035,18,"0022","00","22","Phase 3 power factor (1)","None","single",,,,
+36,1,30037,19,"0024","00","24","Phase 1 phase angle","Degre es","single","°",,,
+38,1,30039,20,"0026","00","26","Phase 2 phase angle","Degre es","single","°",,,
+40,1,30041,21,"0028","00","28","Phase 3 phase angle","Degre es","single","°",,,
+42,1,30043,22,"002A","00","2A","Average line to neutral volts","Volts","single","V",,,
+46,2,30047,24,"002E","00","2E","Average line current","Amps","single","A",,,
+48,1,30049,25,"0030","00","30","Sum of line currents","Amps","single","A",,,
+52,2,30053,27,"0034","00","34","Total system power","Watts","single","W","x",1,"Ptot"
+56,2,30057,29,"0038","00","38","Total system volt amps","VA","single","VA",,,
+60,2,30061,31,"003C","00","3C","Total system var","VAr","single","VAR","x",1,"VArtot"
+62,1,30063,32,"003E","00","3E","Total system power factor (1)","None","single",,,,
+66,2,30067,34,"0042","00","42","Total system phase angle","Degre es","single","°",,,
+70,2,30071,36,"0046","00","46","Frequency of supply voltages","Hz","single","Hz","x",1,"F"
+72,1,30073,37,"0048","00","48","Import wh since last reset (2)","kWh/M Wh","single","kWh","x",1,"E_imp"
+74,1,30075,38,"004A","00","4A","Export wh since last reset (2)","kWH/ MWh","single","kWh","x",1,"E_exp"
+76,1,30077,39,"004C","00","4C","Import varh since last reset (2)","kVArh/ MVArh","single","kVArh",,,
+78,1,30079,40,"004E","00","4E","Export varh since last reset (2)","kVArh/ MVArh","single","kVArh",,,
+80,1,30081,41,"0050","00","50","Vah since last reset (2)","kVAh/ MVAh","single","kVArh",,,
+82,1,30083,42,"0052","00","52","Ah since last reset(3)","Ah/kAh","single","Ah",,,
+84,1,30085,43,"0054","00","54","Total system power demand (4)","Watts","single","W",,,
+86,1,30087,44,"0056","00","56","Maximum total system power","Watts","single","W",,,
+100,7,30101,51,"0064","00","64","Total system va demand","VA","single","VA",,,
+102,1,30103,52,"0066","00","66","Maximum total system va demand","VA","single","VA",,,
+104,1,30105,53,"0068","00","68","Neutral current demand","Amps","single","A",,,
+106,1,30107,54,"006A","00","6A","Maximum neutral current demand","Amps","single","A",,,
+200,47,30201,101,"00C8","00","C8","Line 1 to line 2 volts","Volts","single","V",,,
+202,1,30203,102,"00CA","00","CA","Line 2 to line 3 volts","Volts","single","V",,,
+204,1,30205,103,"00CC","00","CC","Line 3 to line 1 volts","Volts","single","V",,,
+206,1,30207,104,"00CE","00","CE","Average line to line volts","Volts","single","V",,,
+224,9,30225,113,"00E0","00","E0","Neutral current","Amps","single","A",,,
+234,5,30235,118,"00EA","00","EA","Phase 1 l/n volts thd","%","single","%","x",2,"thdU1"
+236,1,30237,119,"00EC","00","EC","Phase 2 l/n volts thd","%","single","%","x",2,"thdU2"
+238,1,30239,120,"00EE","00","EE","Phase 3 l/n volts thd","%","single","%","x",2,"thdU3"
+240,1,30241,121,"00F0","00","F0","Phase 1 current thd","%","single","%","x",2,"thdI1"
+242,1,30243,122,"00F2","00","F2","Phase 2 current thd","%","single","%","x",2,"thdI2"
+244,1,30245,123,"00F4","00","F4","Phase 3 current thd","%","single","%","x",2,"thdI3"
+248,2,30249,125,"00F8","00","F8","Average line to neutral volts thd","%","single","%","x",2,"thdUtot"
+250,1,30251,126,"00FA","00","FA","Average line current thd","%","single","%","x",2,"thdItot"
+254,2,30255,128,"00FE","00","FE","-total system power factor (5)","Degre es","single","°",,,
+258,2,30259,130,"0102","01","02","Phase 1 current demand","Amps","single","A",,,
+260,1,30261,131,"0104","01","04","Phase 2 current demand","Amps","single","A",,,
+262,1,30263,132,"0106","01","06","Phase 3 current demand","Amps","single","A",,,
+264,1,30265,133,"0108","01","08","Maximum phase 1 current demand","Amps","single","A",,,
+266,1,30267,134,"010A","01","0A","Maximum phase 2 current demand","Amps","single","A",,,
+268,1,30269,135,"010C","01","0C","Maximum phase 3 current demand","Amps","single","A",,,
+334,33,30335,168,"014E","01","4E","Line 1 to line 2 volts thd"," ","single","%",,,
+336,1,30337,169,"0150","01","50","Line 2 to line 3 volts thd"," ","single","%",,,
+338,1,30339,170,"0152","01","52","Line 3 to line 1 volts thd"," ","single","%",,,
+340,1,30341,171,"0154","01","54","Average line to line volts thd"," ","single","%",,,
+,,,,,,,,,,,,,
+,,,172,,,,"Total kwh(3)","kwh",,"kWh","x",3,"E_sld"
+,,,173,,,,"Total kvarh(3)","kvarh",,"kVArh","x",3,"VAr_sld"
+,,,174,,,,"L1 import kwh","kwh",,"kWh","x",3,"E1_imp"
+,,,175,,,,"L2 import kwh","kwh",,"kWh","x",3,"E2_imp"
+,,,176,,,,"L3 import kWh","kwh",,"kWh","x",3,"E3_imp"
+,,,177,,,,"L1 export kWh","kwh",,"kWh","x",3,"E1_imp"
+,,,178,,,,"L2 export kwh","kwh",,"kWh","x",3,"E2_imp"
+,,,179,,,,"L3 export kWh","kwh",,"kWh","x",3,"E3_imp"
+,,,180,,,,"L1 total kwh(3)","kwh",,"kWh","x",3,"E1_sld"
+,,,181,,,,"L2 total kWh(3)","kwh",,"kWh","x",3,"E2_sld"
+,,,182,,,,"L3 total kwh(3)","kwh",,"kWh","x",3,"E3_sld"
+,,,183,,,,"L1 import kvarh","kvarh",,"kVArh",,,
+,,,184,,,,"L2 import kvarh","kvarh",,"kVArh",,,
+,,,185,,,,"L3 import kvarh","kvarh",,"kVArh",,,
+,,,186,,,,"L1 export kvarh","kvarh",,"kVArh",,,
+,,,187,,,,"L2 export kvarh","kvarh",,"kVArh",,,
+,,,188,,,,"L3 export kvarh","kvarh",,"kVArh",,,
+,,,189,,,,"L1 total kvarh (3)","kvarh",,"kVArh",,,
+,,,190,,,,"L2 total kvarh (3)","kvarh",,"kVArh",,,
+,,,191,,,,"L3 total kvarh (3)","kvarh",,"kVArh",,,
