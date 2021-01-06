@@ -41,31 +41,37 @@ my @counter_subset = sort grep {
 		$Counterlist{ $_ }->{ bus } eq $bustag ;
 	}   keys %Counterlist;
 
-
-
-
+foreach my $counter_tag (@counter_subset) {
+  my $counter_ptr = $Counterlist{ $counter_tag };
 # instantiate data cache
 
 # loop over selectors
+  my @selectors = @{$counter_ptr->{ selectors }} ;
+  foreach my $slk (@selectors) {
 
 
-print Data::Dumper->Dump ( [ \@counter_subset ], [ qw( *counter_subset) ] ) ;
+      print Data::Dumper->Dump ( 
+        	[ \@counter_subset, $counter_ptr, \@selectors, $slk], 
+		[ qw(*counter_subset *counter_ptr  *selectors  *slk) ] ) ;
+
+
+          die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+
+
+  } # foreach my $slk (@selectors) {
 
 
 # sanity check
-
 # loop over rrds 
-
-
 # rrdupdate
-
 # time sync
 
 
+} # foreach my $counter_tag (@counter_subset)
 
 
 
-die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+
 #=========== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # data below hat to be extracted from counter /rrd config
