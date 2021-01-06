@@ -95,7 +95,7 @@ foreach my $counter (@counters) {
       if ($opt_a) { print "    press <ENTER> to continue\n"; <STDIN> ;} 
       next if ($opt_D) ;
 
-      if ((-e $current_rrd) and ! $opt_f ) {
+      if ((-e $current_rrd) and ! $opt_f and ! $opt_s ) {
 	 print "cowardly refusing to overwrite existing file $current_rrd - use [-f] option to override \n";
 	 next;
       } 
@@ -158,10 +158,11 @@ HEAD
       
       # print "\n--------------------------\n$cmd \n--------------------------\n";
 
-      die "========= still to do ==========";
+      # die "========= still to do ==========";
   }
 }
 
 
-die "#### ~~~~~~~~~~~~ Baustelle ~~~~~~~~~~~~ ####";
-
+# die "#### ~~~~~~~~~~~~ Baustelle ~~~~~~~~~~~~ ####";
+# regular exit
+#
