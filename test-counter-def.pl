@@ -4,6 +4,7 @@
 use warnings;
 use strict;
 use Data::Dumper  qw(Dumper);
+# use Data::Dumper::Simple :
 
 our $Debug = 3;
 
@@ -20,10 +21,17 @@ require ('./my_counters.pm');
 
 
 
-# debug_dumper (3, \@SDM_regs , \%SDM_selectors , );
-debug_dumper (3,  \%SDM_selectors , );
+#debug_dumper (3, 
+print Data::Dumper->Dump (
+	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \%Counterlist  ] ,
+	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors   *Counterlist ) ]  );
 
-debug_dumper (3, \%Counterlist);
+print Data::Dumper->Dump ( [ \@all_selectors ]  , [ qw(*all_selectors) ]  );
+
+
+
+
+# debug_dumper (3, \%Counterlist);
 
 # my @all_selectors = map { $_ 
 #    keys 
