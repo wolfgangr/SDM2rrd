@@ -55,6 +55,8 @@ sub read_csv_SDM_def {
 	# strip ""
 	(defined $unit) ? ( $unit =~ s/^\"(.*)\"$/$1/) : ($unit = '') ;  # if $unit ;
 	$desc =~ s/^\"(.*)\"$/$1/ ; 
+	if (defined $tag) { $tag =~ s/^\"(.*)\"$/$1/ ; }
+
 
 	debug_printf (4, "sel: %d  field: %d, adr: 0x%04x, tag %s, unit %s, \t%s\n", 
 		$selector, $par_no, ($par_no-1)*2, , $tag, $unit, $desc ) ;  

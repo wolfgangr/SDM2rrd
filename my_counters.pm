@@ -42,48 +42,48 @@ $Counterlist{'mains'} = {
 	bus => 'MODBUS-infini',
 	ID =>  1,
 	Label => 'Hausanschluss',
-	direction => 1 , 
-	selectors => [  ] ,
+	# direction => 1 , 
+	# selectors => [  ] ,
 };
 
 $Counterlist{'subs1'} = {
         bus => 'tcp-241',
         ID =>  1,
         Label => 'Wohnhaus neu',
-        direction => 1,
-	selectors => [ ] ,
+	# direction => 1,
+	# selectors => [ ] ,
 };
 
 $Counterlist{'subs2'} = {
         bus => 'tcp-241',
         ID =>  2,
         Label => 'Wohnhaus alt',
-        direction => 1,
-        selectors => [ ] ,
+	# direction => 1,
+	# selectors => [ ] ,
 };
 
 $Counterlist{'subs3'} = {
         bus => 'tcp-241',
         ID =>  3,
         Label => 'Stall + Werkstatt',
-        direction => 1,
-        selectors => [ ] ,
+	# direction => 1,
+	# selectors => [ ] ,
 };
 
 $Counterlist{'subs4'} = {
         bus => 'tcp-241',
         ID =>  4,
         Label => 'Kartoffellager',
-        direction => 1,
-        selectors => [ ] ,
+	# direction => 1,
+	# selectors => [ ] ,
 };
 
 $Counterlist{'subs5'} = {
         bus => 'tcp-241',
         ID =>  5,
         Label => 'Heizung',
-        direction => 1,
-        selectors => [ ] ,
+	# direction => 1,
+	# selectors => [ ] ,
 };
 
 $Counterlist{'subs6'} = {
@@ -91,11 +91,15 @@ $Counterlist{'subs6'} = {
         ID =>  6,
         Label => 'Infini-LTO',
         direction => -1,
-        selectors => [ ] ,
+	selectors => [ [ 'Ptot' ]  ] ,
 };
 
 
-
+# fill defaults
+foreach my $counter ( values %Counterlist) {
+	unless ( defined $counter->{direction} ) { $counter->{direction} = 1 };
+	unless ( defined $counter->{selectors} ) { $counter->{selectors} = \@all_selectors };
+}
 
 
 # my @test = qw ( foo bar tralala );

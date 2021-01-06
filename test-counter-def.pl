@@ -20,7 +20,7 @@ require ('./my_counters.pm');
 
 
 
-debug_dumper (3, \@SDM_regs , \%SDM_selectors , );
+# debug_dumper (3, \@SDM_regs , \%SDM_selectors , );
 
 debug_dumper (3, \%Counterlist);
 
@@ -31,7 +31,7 @@ debug_dumper (3, \%Counterlist);
 
 
 
-debug_dumper (3, \@all_selectors );
+# debug_dumper (3, \@all_selectors );
 
 exit;
 
