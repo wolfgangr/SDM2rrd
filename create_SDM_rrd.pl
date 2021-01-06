@@ -61,13 +61,33 @@ our ( $RRD_dir , $RRD_prefix , $RRD_sprintf );
 our %RRD_definitions ;
 require ('./rrd_def.pm');
 
-# print Data::Dumper->Dump (
-# 	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
-# 	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  );
-# print Data::Dumper->Dump ( [ \%RRD_definitions ]  , [ qw(%RRD_definitions) ]  );
+if ($opt_d) { $RRD_dir = $opt_d ; }
+if ($opt_p) { $RRD_prefix = $opt_p ; }
 
 my @counters = sort keys %Counterlist;
 my @rrddefs  = sort keys %RRD_definitions;
+
+if ($opt_l) {
+	print "params expand to rrd file template: ";
+	printf ($RRD_sprintf, $RRD_dir, $RRD_prefix , '<counter>', '<rrd-def>');
+	print "\n";
+
+	print "  - available counters:  ";
+	print join ( ' ', @counters), "\n";
+	print "  - available rrd defs:  ";
+	print join ( ' ', @rrddefs), "\n";
+	print "\n";
+
+	exit ;
+}
+
+foreach my $counter (@counters) {
+     @rrddefs = @{$Counterlist{ $counter }->{ rrds }};	
+    foreach my $rrd_d (@rrddefs) {
+      my $current_rrd = sprintf ($RRD_sprintf, $RRD_dir, $RRD_prefix , $counter,  $rrd_d );
+      print "  - processing $current_rrd ... \n";
+  }
+}
 
 
 die "#### ~~~~~~~~~~~~ Baustelle ~~~~~~~~~~~~ ####";
