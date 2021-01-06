@@ -91,8 +91,17 @@ foreach my $counter (@counters) {
 
       my $current_rrd = sprintf ($RRD_sprintf, $RRD_dir, $RRD_prefix , $counter,  $rrd_d );
       print "  - processing $current_rrd ... \n" unless ($opt_q) ;
+      
       if ($opt_a) { print "    press <ENTER> to continue\n"; <STDIN> ;} 
       next if ($opt_D) ;
+
+      if ($opt_t) {
+	 `touch $current_rrd `;
+	  next ; 
+      }
+
+
+
       die "========= still to do ==========";
   }
 }
