@@ -10,27 +10,18 @@ require ('./my_debugs.pl');
 
 
 our $sdm_def_file = "SDM630proto-usage.csv" ;
-# open (my $IN, '<', $sdm_def_file) or die "cannot open $sdm_def_file : $!";
 
 
-# this is what main might want
-# our @SDM_regs =();    		# resembling the raw data for whatever use
-# our %SDM_reg_by_tag =();  	# for human readable direct access
-# our %SDM_selectors =();		# indexed by selector / number => tag
-
+# two line test code and usage guide
 my ($SDM_regs , $SDM_reg_by_tag , $SDM_selectors)  =( read_csv_SDM_def ( $sdm_def_file ));
-# my $SDM_reg_by_tag = reg_by_tag ( $SDM_regs);
-# my $SDM_selectors = tag_by_selector ( $SDM_regs);
-
 debug_dumper ( 3, $SDM_regs, $SDM_reg_by_tag , $SDM_selectors );
 
-# debug_dumper ( 3, $SDM_regs,);
 
 exit;
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-# \@SDM_regs = read_csv_SDM_def ( $csv_file_name )
+# \@SDM_regs, \%SDM_reg_by_tag , \%SDM_selectors  = read_csv_SDM_def ( $csv_file_name )
 #
 sub read_csv_SDM_def { 
   my $filename = shift;
@@ -76,4 +67,4 @@ sub read_csv_SDM_def {
   return (\@regs,  \%reg_by_tag , \%selectors )  ;
 }
 
-
+1;
