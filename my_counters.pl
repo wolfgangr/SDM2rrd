@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use Data::Dumper  qw(Dumper);
 
-our $Debug = 5;
+our $Debug ;
 require ('./my_debugs.pl');
 
 
@@ -14,7 +14,11 @@ our %SDM_reg_by_tag =();  	# for human readable direct access
 our %SDM_selectors =();		# indexed by selector / number => tag
 require ('./extract-SDM-def.pl');
 
-debug_Dumper (3, \%SDM_selectors );
+my @test = qw ( foo bar tralala );
+
+$Debug=5;
+
+debug_Dumper (1, \%SDM_selectors , \@test );
 
 1;
 exit;
