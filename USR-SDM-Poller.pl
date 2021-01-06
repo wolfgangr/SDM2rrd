@@ -13,8 +13,8 @@ use IO::Socket;
 my $remoteport = 502 ;
 # my $remotehost = "192.168.1.241";
 my $remotehost = "USR-TCP-stromz.rosner.lokal"; 
-my $bustag = 'MODBUS-infini' ;  # we only handle counters belonging to this tag
-
+# my $bustag = 'MODBUS-infini' ;  # we only handle counters belonging to this tag
+my $bustag = 'tcp-241';
 
 our $Debug = 3;
 
@@ -37,9 +37,20 @@ require ('./rrd_def.pm');
 
 # loop over counters
 
+my @counter_subset = sort grep {  
+		$Counterlist{ $_ }->{ bus } eq $bustag ;
+	}   keys %Counterlist;
+
+
+
+
 # instantiate data cache
 
 # loop over selectors
+
+
+print Data::Dumper->Dump ( [ \@counter_subset ], [ qw( *counter_subset) ] ) ;
+
 
 # sanity check
 
