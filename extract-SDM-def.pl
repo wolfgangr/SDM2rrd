@@ -5,13 +5,15 @@ use warnings;
 use strict;
 use Data::Dumper  qw(Dumper);
 
+my $Debug = 3;
 my $sdm_def_file = "SDM630proto-usage.csv" ;
 open (my $IN, '<', $sdm_def_file) or die "cannot open $sdm_def_file : $!";
 
 
-
-our @SDM_regs =();
-our %SDM_reg_by_tag =();
+# this is what main might want
+our @SDM_regs =();    		# resembling the raw data for whatever use
+our %SDM_reg_by_tag =();  	# for human readable direct access
+our %SDM_selectors =();		# indexed by selector / number => tag
 
 while (<$IN>) {
 
@@ -19,7 +21,7 @@ while (<$IN>) {
 	chomp;
 
 	my @fields = split ',' ;
-	# print Dumper (@fields);
+	debug_dumper ( 5, @fields);
    		
 	# my ($par_no, $desc, $unit, $selector, $tag) = @fields[3,7,10,12,13];
         my @subset  = @fields[3,7,10,12,13];
@@ -27,11 +29,11 @@ while (<$IN>) {
 	next unless $par_no;
         
 	# strip ""
-	$unit =~ s/^\"(.*)\"$/$1/ ;
-	$desc =~ s/^\"(.*)\"$/$1/ ;
+	(defined $unit) ? ( $unit =~ s/^\"(.*)\"$/$1/) : ($unit = '') ;  # if $unit ;
+	$desc =~ s/^\"(.*)\"$/$1/ ; 
 
-	printf "sel: %d  field: %d, adr: 0x%04x, tag %s, unit %s, \t%s\n", 
-		$selector, $par_no, ($par_no-1)*2, , $tag, $unit, $desc;  
+	debug_printf (4, "sel: %d  field: %d, adr: 0x%04x, tag %s, unit %s, \t%s\n", 
+		$selector, $par_no, ($par_no-1)*2, , $tag, $unit, $desc ) ;  
 
 	push @SDM_regs, \@subset;
 	# die "debug";
@@ -44,9 +46,29 @@ while (<$IN>) {
 			selector => $selector
 		) ;
 		$SDM_reg_by_tag{$tag} = \%this ;
+
+		$SDM_selectors{$selector}{$par_no}= $tag ;
 	}
 }
 
-print Dumper (\@SDM_regs, \%SDM_reg_by_tag );
+debug_dumper ( 3, \@SDM_regs, \%SDM_reg_by_tag , \%SDM_selectors );
 
+exit;
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# debug_print($level, $content)
+sub debug_print {
+  my $level = shift @_;
+  print STDERR @_ if ( $level <= $Debug) ;
+}
+
+sub debug_printf {
+  my $level = shift @_;
+  printf STDERR  @_ if ( $level <= $Debug) ;
+}
+
+sub debug_dumper {
+  my $level = shift @_;
+  print STDERR (Data::Dumper->Dump( \@_ )) if ( $level <= $Debug) ;
+}
 
