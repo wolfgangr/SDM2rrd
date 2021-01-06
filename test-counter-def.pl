@@ -23,10 +23,10 @@ require ('./my_counters.pm');
 
 #debug_dumper (3, 
 print Data::Dumper->Dump (
-	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \%Counterlist  ] ,
-	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors   *Counterlist ) ]  );
+	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
+	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  );
 
-print Data::Dumper->Dump ( [ \@all_selectors ]  , [ qw(*all_selectors) ]  );
+# print Data::Dumper->Dump ( [ \@all_selectors ]  , [ qw(*all_selectors) ]  );
 
 
 
