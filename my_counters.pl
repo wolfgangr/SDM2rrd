@@ -12,13 +12,13 @@ require ('./my_debugs.pl');
 our @SDM_regs =();    		# resembling the raw data for whatever use
 our %SDM_reg_by_tag =();  	# for human readable direct access
 our %SDM_selectors =();		# indexed by selector / number => tag
-require ('./extract-SDM-def.pl');
+include ('./extract-SDM-def.pl');
 
 my @test = qw ( foo bar tralala );
 
-$Debug=5;
+$Debug=2;
 
-debug_Dumper (1, \%SDM_selectors , \@test );
+# debug_Dumper (1, \%SDM_selectors , \@test );
 
 1;
 exit;
