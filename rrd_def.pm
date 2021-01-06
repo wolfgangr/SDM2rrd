@@ -1,5 +1,10 @@
 use warnings;
 use strict;
+
+our $RRD_dir = './rrd';
+our $RRD_prefix = 'mySDM' ;
+our $RRD_sprintf = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
+
 # use Data::Dumper  qw(Dumper);
 
 # our $Debug ;

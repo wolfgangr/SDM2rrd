@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use Data::Dumper  qw(Dumper);
 
-our $Debug = 3;
+our $Debug ; # = 3;
 require ('./my_debugs.pl');
 
 
