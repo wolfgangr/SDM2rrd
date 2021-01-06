@@ -138,7 +138,18 @@ HEAD
       # replace ordinary \n by shell type ' \<nl>'
       $cmd .= join $nl, (split '\n', $rradef ) ;
 
-      print "\n--------------------------\n$cmd \n--------------------------\n";
+      if ($opt_s) {  # write shell script instead of rrd
+	      printf "rdd file name %s replaced  by ",  $current_rrd ;
+	      $current_rrd =~ s/(.*)\.rrd$/$1_create.sh/ 
+		      	or die  "can't create .sh file name";
+	      print $current_rrd, "\n"; 
+
+	      open (my $SH, '>', $current_rrd) or die "cannot write to $current_rrd : $!";
+	      print $SH $cmd;
+	      close $SH ;
+
+      }
+      # print "\n--------------------------\n$cmd \n--------------------------\n";
 
       die "========= still to do ==========";
   }
