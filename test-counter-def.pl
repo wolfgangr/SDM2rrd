@@ -29,9 +29,15 @@ print Data::Dumper->Dump (
 
 print Data::Dumper->Dump ( [ \%RRD_definitions ]  , [ qw(%RRD_definitions) ]  );
 
-print join (' ' , keys %RRD_definitions ), "\n";
+print " ===== rrd defs : " , join (' ' , keys %RRD_definitions ), " =====\n";
 
-
+foreach my $rrd (keys %RRD_definitions ) {
+	my $rrd_hp = $RRD_definitions{$rrd} ;
+	my $fields = $RRD_definitions{$rrd}->{fields};
+	# print Dumper  ( $fields, $rrd_hp);
+	print $rrd, "\n";
+	print join (' ' , @$fields ),  "\n";
+}
 
 # debug_dumper (3, \%Counterlist);
 

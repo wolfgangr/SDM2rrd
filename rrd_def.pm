@@ -73,7 +73,7 @@ EOF_EB_RRA
 
 
 $RRD_definitions{'elquality'} = {
-	fields => [ qw(F VAr1 VAr2 VAr3 VArtot thdU1 thdU2 thdU3 thdUtot thdI1 thdI2 thdI3 thdItot)],
+	fields => [ qw(  F   VAr1 VAr2 VAr3 VArtot   thdI1 thdI2 thdI3 thdItot   thdU1 thdU2 thdU3 thdUtot )],
 	rradef => <<"EOF_EQ_RRA",
 RRA:AVERAGE:0.5:30s:10d
 RRA:AVERAGE:0.5:5m:1m
