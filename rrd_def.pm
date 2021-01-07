@@ -93,8 +93,8 @@ EOF_EQ_RRA
 # step = 5
 # hb =30
 
-my $default_step = 5;
-my $default_hb = 10;
+my $default_step = 30;
+my $default_hb = 30;
 
 foreach my $rrd_def  ( values %RRD_definitions) {
   unless ( defined $rrd_def->{step}      ) { $rrd_def->{step}      = $default_step ; }

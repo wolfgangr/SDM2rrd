@@ -17,6 +17,15 @@ my $remotehost = "USR-TCP-stromz.rosner.lokal";
 # my $bustag = 'MODBUS-infini' ;  # we only handle counters belonging to this tag
 my $bustag = 'tcp-241';
 
+# low level retries upon socket read errors - us wait times
+# at least 3 presumably to read off garbage after loss of sync
+# sum of all times elapse if timer is down
+our @RETRIES = qw ( 10 100 1000 10000 ) ; 
+
+
+my $interval =5 ; # seconds between runs
+# my $interval_shift =3.7 ; # seconds shift
+
 our $Debug = 3;
 
 
@@ -56,8 +65,14 @@ my @counter_subset = sort grep {
 	}   keys %Counterlist;
 
 
+
+	
 # ========== main loop over counters ================	
 HEAD_OF_MAIN_LOOP:
+
+ 
+# my $lastrun = Time::HiRes::time();
+# my $step = $lastrun +
 
 
 foreach my $counter_tag (@counter_subset) {
@@ -166,10 +181,10 @@ foreach my $counter_tag (@counter_subset) {
   # die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
   # if last counter maybe do some stuff, wait a bit  and start anew
   # time sync
-  sleep 2;
+  usleep 1e6 ;
 } # foreach my $counter_tag (@counter_subset)
 
-# sleep 3 ;
+sleep 5 ;
 
 goto HEAD_OF_MAIN_LOOP ;
 
@@ -282,7 +297,14 @@ sub query_socket {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
   print $sock $qry ; 
   my $response ;
-  my $qr_status = (sysread ( $sock, $response,  $nexp) ) ;
+  
+  # usually one shot is OK, but when the line goes out of sync, retries may help
+  my $retry_count = 0;
+  until (sysread ( $sock, $response,  $nexp) ) {
+    return undef if $retry_count > $#RETRIES;
+    usleep $RETRIES[$retry_count++] ;
+	
+  } 
   # if happens (shit) return undef;
   return $response;
 }
