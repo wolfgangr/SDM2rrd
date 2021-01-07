@@ -27,8 +27,6 @@ my $interval = 15 ; # seconds between runs
 my $interval_shift = 7 ; # seconds shift from even interval
 
 our $Debug = 1;
-
-
 require ('./my_debugs.pl');
 
 # our $sdm_def_file;
@@ -46,6 +44,9 @@ our ($RRD_dir , $RRD_prefix, $RRD_sprintf ); # = "%s/%s_%s_%s.rrd"; # $dir, $pre
 require ('./rrd_def.pm');
 
 # == set up socket connection =====
+
+# my $human_readable_starttime = `date`;
+debug_printf (0, "%s started at %s", $0, `date`);
 
 
 # my $EOL = "\015\012";
