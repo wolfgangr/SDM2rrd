@@ -95,10 +95,11 @@ COUNTER: foreach my $counter_tag (@counter_subset) {
 	if ($parno > $max ) { $max = $parno ; }
       }  # foreach my $stg (@$slk)
 
-      debug_print(5, Data::Dumper->Dump ( 
+      if ($Debug >=5) { print(Data::Dumper->Dump ( 
           	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
       		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) 
       		);
+	}
 
       debug_printf (4, " from %d to %d, \n ", $min, $max );
 
@@ -127,10 +128,11 @@ COUNTER: foreach my $counter_tag (@counter_subset) {
 
   # --------- values per counter successfully retrieved
   
-  debug_print( 5, Data::Dumper->Dump (
+  if ( $Debug >=5 ) { print(  Data::Dumper->Dump (
 	[ \$counter_ptr ,  \%valhash ],  
 	[ qw(*counter_ptr   *valhash ) ] ) 
   	);
+  }
 
   # loop over rrds
   foreach my $rrd_tag ( @{$counter_ptr->{ rrds }} ) {  
@@ -158,7 +160,7 @@ COUNTER: foreach my $counter_tag (@counter_subset) {
     unless ( $check_all_empty ) { 
       debug_printf (1 ,"empty data set at counter %s -> rrd %s \n" , $counter_tag, $rrd_tag );
       debug_printf (2, "%s\n%s\n",  $rrd_tpl , $valstr );
-      debug_print (3 , Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ) ;
+      if ( $Debug >=3)  { print (3 , Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ) ; }
       # die "DEBUG ---- empty data set ";
       next COUNTER ;
     }
