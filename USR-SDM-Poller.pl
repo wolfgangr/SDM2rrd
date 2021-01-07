@@ -43,21 +43,26 @@ my @counter_subset = sort grep {
 
 foreach my $counter_tag (@counter_subset) {
   my $counter_ptr = $Counterlist{ $counter_tag };
-# instantiate data cache
-
-# loop over selectors
+  # instantiate data cache
+  my %valhash =();
+  # loop over selectors
   my @selectors = @{$counter_ptr->{ selectors }} ;
   foreach my $slk (@selectors) {
+    # we have a list of tags, but need numeric indices - at least start an lengt
+    # suppose we have a a hast by tag with hash of index / value /whaev
+      my $min = 999999;
+      my $max = -1 ;
+      foreach my $stg (@$slk) {
 
 
       print Data::Dumper->Dump ( 
-        	[ \@counter_subset, $counter_ptr, \@selectors, $slk], 
-		[ qw(*counter_subset *counter_ptr  *selectors  *slk) ] ) ;
+        	[ \@counter_subset, $counter_ptr, \@selectors, $slk, $stg ], 
+		[ qw(*counter_subset *counter_ptr  *selectors  *slk  *stg ) ] ) ;
 
 
           die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
 
-
+      } # foreach my $stg (@$slk) {
   } # foreach my $slk (@selectors) {
 
 
