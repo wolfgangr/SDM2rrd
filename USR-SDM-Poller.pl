@@ -95,51 +95,48 @@ foreach my $counter_tag (@counter_subset) {
 	if ($parno > $max ) { $max = $parno ; }
       }  # foreach my $stg (@$slk)
 
-      if (0) {
-        print Data::Dumper->Dump ( 
+      debug_print(5, Data::Dumper->Dump ( 
           	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
-      		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
-      }
+      		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) 
+      		);
 
-      #	printf " from %d to %d, \n ", $min, $max ;
+      debug_printf (4, " from %d to %d, \n ", $min, $max );
 
       my @floats = SDM_query_cooked ($device_ID,  $min, $max  ) ;
-      # print join (' : ', @floats), "\n";
-      # print Dumper (\@floats);
+      debug_print (3, join (' : ', @floats), "\n");
     
       # now backref'ing ... back down the pada tree ... OMG
       my $i = -1;
       foreach my $parno ( $min .. $max ) {
 	      $i++;
-	      # print "$parno -> $i ";
+	      debug_print (5, "$parno -> $i ") ;
 	      my $this_tag = $SDM_tags_by_parno{  $parno};
 	      next unless (defined $this_tag)  ;
-	      # print "$parno -> $i => $this_tag ";
+	      debug_print (5, "$parno -> $i => $this_tag ");
 	      $valhash{  $this_tag }->{ 'val' } = $floats [ $i ]
       }
-      # print "\n";
+      debug_print "\n";
       # die " ==== healing - not yet ~~~~+~~";
 
   } # foreach my $slk (@selectors) {
 
   # --------- values per counter successfully retrieved
-  if (0) {
-     print Data::Dumper->Dump (
+  
+  debug_print( 5, Data::Dumper->Dump (
 	[ \$counter_ptr ,  \%valhash ],  
-	[ qw(*counter_ptr   *valhash ) ] ) ;
-  }
+	[ qw(*counter_ptr   *valhash ) ] ) 
+  	);
 
   # loop over rrds
   foreach my $rrd_tag ( @{$counter_ptr->{ rrds }} ) {  
-    # printf "counter %s -> rrd %s \n" , $counter_tag, $rrd_tag ;
-    # $RRD_sprintf = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
+    debug_printf (4, "counter %s -> rrd %s \n" , $counter_tag, $rrd_tag );
     my $rrdfile = sprintf $RRD_sprintf, $RRD_dir, $RRD_prefix, $counter_tag, $rrd_tag;
-    print $rrdfile , "\n";
+    debug_print (2, $rrdfile , "\n");
 
     my $rrd_dhp = $RRD_definitions{$rrd_tag} ;
     my @rrd_fields  = @{$rrd_dhp->{ fields    }} ;
     my $rrd_tpl = join ( ':', @rrd_fields);
-    # print $rrd_tpl , "\n";
+    debug_print(3, $rrd_tpl , "\n");
 
     my $valstr ='N' ;
     my $check_all_epty = 0 ;
@@ -154,31 +151,25 @@ foreach my $counter_tag (@counter_subset) {
     }
 
     unless ( $check_all_epty ) { 
-      printf "empty data set at counter %s -> rrd %s \n" , $counter_tag, $rrd_tag ;
-      print $rrd_tpl , "\n";
-      print $valstr , "\n";
-      print Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ;
-      die "DEBUG ---- empty data set ";
+      debug_printf (1 "empty data set at counter %s -> rrd %s \n" , $counter_tag, $rrd_tag );
+      debug_printf (2, "%s\n%s\n",  $rrd_tpl , $valstr );
+      debug_print (3 Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ) ;
+      # die "DEBUG ---- empty data set ";
       next;
     }
 
     # print $valstr , "\n";
     RRDs::update($rrdfile, '--template', $rrd_tpl, $valstr);
     if ( RRDs::error ) {
-      print "error updating RRD:" . RRDs::error . "\n" ;
+      debug_printf (2, "error updating RRD: %s \n" , RRDs::error ) ;
     } else {
-	    # print "rrd update succesful\n";
+      debug_print(4, "rrd update succesful\n");
     }
-  # rrdupdate
-  	#    my $valstr = join(':', ('N', @vals) );
-    	#    debug_print (4, "values: $valstr  \n");
-	#    RRDs::update($infini_rrd, '--template', $rrd_stat_tpl, $valstr);
   }
 # TODO time sync
 
 
 
-  # die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
   # if last counter maybe do some stuff, wait a bit  and start anew
   # time sync
   usleep 1e6 ;
@@ -290,7 +281,7 @@ sub SDM_parse_response {
 }
 
 # perform physical socket queries
-# TODO:  errorr checking  with retry and timeouts
+# todo OK?:  errorr checking  with retry and timeouts
 # returns answer string or undef upon failure
 # $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
 sub query_socket {
