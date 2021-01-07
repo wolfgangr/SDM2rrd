@@ -108,11 +108,15 @@ foreach my $counter_tag (@counter_subset) {
       print $sock $sendstring ; 
       my $response ;
       # this better might be catched!
-      (read ( $sock, $response, $n_regs*4 +5 ) )  or die "not enought data received";
+      # 	see https://perldoc.perl.org/functions/sysread
+      # <id><cmd><len> ..... payload ..... <crc>
+      #  1    1    1      $n_regs*4          2
+      my $qr_status = (sysread ( $sock, $response, $n_regs*4 +5 +10 ) ) ; #  or die "not enought data received";
       
       my @response = string2array ($response);
       print debug_hexdump( \@response) , "\n";
 
+      # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
       my @unpacked = unpack ( 'H2' x 3 . 'N' x $n_regs . 'H4' , $response ); 
       print Dumper (\@unpacked);
 
