@@ -88,7 +88,7 @@ die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   } # foreach my $slk (@selectors) {
 
-
+# TODO
 # sanity check
 # loop over rrds 
 # rrdupdate
@@ -150,15 +150,39 @@ sub SDM_querystring {
 sub SDM_parse_response {
   my ($response, $device_ID, $n_regs) = @_ ;   
   # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
-  my @unpacked = unpack ( 'H2' x 3 . 'N' x $n_regs . 'H4' , $response ); 
+  my @unpacked = unpack ( 'C' x 3 . 'N' x $n_regs . 'H4' , $response ); 
 
-  my @floats = map { decodeIEE754($_) } @unpacked[3.. $n_regs + 2 ] ;
+  my $u_len = scalar @unpacked ;
+  # return undef if scalar @unpacked < $n_regs + 4;
+  my $r_crc = hex pop @unpacked ;
+  my @digest = modbusCRC ( \@unpacked );
 
-  # if happens (shit) return undef;
+  my $r_did = shift @unpacked;
+  unless ( $r_did  == $device_ID ) 
+  	{ die sprintf "SDM response device ID mismatch 0x%02x -> 0x%02x ", $device_ID, $r_did  ; }
+
+  my $r_cmd = shift @unpacked ;
+  unless ( $r_cmd  == 0x04 )
+  	{ die sprintf "SDM response cmd ID mismatch - expect 0x04, got 0x%02x ",  $r_cmd  ; }
+
+  my $r_len = shift @unpacked ;
+  my $r_len_want = $n_regs *4  ;
+  unless ( $r_len  == $r_len_want )
+	{ die sprintf "SDM indicated response length mismatch - want %d, got %d", $r_len_want, $r_len   ; }
+
+
+  my @floats = map { decodeIEE754($_) } @unpacked ;
+  unless ( scalar @floats == $n_regs) 
+  	{ die "SDM response variable number mismatch"; } 
+
+  printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
+    $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
+  # TODO don't die - if happens (shit) return undef;
   return ( @floats) ;
 }
 
-# perform physical socket queries with retry and timeouts
+# perform physical socket queries
+# TODO:  errorr checking  with retry and timeouts
 # returns answer string or undef upon failure
 # $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
 sub query_socket {
