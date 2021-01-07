@@ -32,6 +32,8 @@ our @all_selectors;
 require ('./my_counters.pm');
 
 our %RRD_definitions ;
+
+our ($RRD_dir , $RRD_prefix, $RRD_sprintf ); # = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
 require ('./rrd_def.pm');
 
 # == set up socket connection =====
@@ -74,9 +76,11 @@ foreach my $counter_tag (@counter_subset) {
 	if ($parno > $max ) { $max = $parno ; }
       }  # foreach my $stg (@$slk)
 
-      print Data::Dumper->Dump ( 
-         	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
+      if (0) {
+        print Data::Dumper->Dump ( 
+          	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
       		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
+      }
 
       #	printf " from %d to %d, \n ", $min, $max ;
 
@@ -92,9 +96,6 @@ foreach my $counter_tag (@counter_subset) {
 	      my $this_tag = $SDM_tags_by_parno{  $parno};
 	      next unless (defined $this_tag)  ;
 	      print "$parno -> $i => $this_tag ";
-	      # next if undef ($this_par);
-	      # my $this_label = $this_par->{ def }->{ 
-	      # $i++;
 	      $valhash{  $this_tag }->{ 'val' } = $floats [ $i ]
       }
       print "\n";
@@ -102,19 +103,32 @@ foreach my $counter_tag (@counter_subset) {
 
   } # foreach my $slk (@selectors) {
 
-# TODO
-# sanity check
-# loop over rrds 
-# rrdupdate
-# time sync
- print Data::Dumper->Dump (
+  # --------- values per counter successfully retrieved
+  if (0) {
+     print Data::Dumper->Dump (
 	[ \$counter_ptr ,  \%valhash ],  
 	[ qw(*counter_ptr   *valhash ) ] ) ;
+  }
+
+  # loop over rrds
+  foreach my $rrd_tag ( @{$counter_ptr->{ rrds }} ) {  
+    printf "counter %s -> rrd %s \n" , $counter_tag, $rrd_tag ;
+    # $RRD_sprintf = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
+    my $rrdfile = sprintf $RRD_sprintf, $RRD_dir, $RRD_prefix, $counter_tag, $rrd_tag;
+    print $rrdfile , "\n";
+  # rrdupdate
+  }
+# time sync
+
+
+
 die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
+  # if last counter maybe do some stuff, wait a bit  and start anew
+  # time sync
 
 } # foreach my $counter_tag (@counter_subset)
 
-# should never be here.... so no nedd to clean up?
+# should never be here.... so no need to clean up?
 
 
 exit;
