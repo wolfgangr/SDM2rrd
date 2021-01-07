@@ -75,7 +75,7 @@ HEAD_OF_MAIN_LOOP:
 # my $step = $lastrun +
 
 
-foreach my $counter_tag (@counter_subset) {
+COUNTER: foreach my $counter_tag (@counter_subset) {
   my $counter_ptr = $Counterlist{ $counter_tag };
   my $device_ID = $counter_ptr->{ ID } ;
   # instantiate data cache
@@ -103,6 +103,11 @@ foreach my $counter_tag (@counter_subset) {
       debug_printf (4, " from %d to %d, \n ", $min, $max );
 
       my @floats = SDM_query_cooked ($device_ID,  $min, $max  ) ;
+      unless ( @floats ) {
+          debug_printf(1, "read failed from counter %s, ID %d, Param. No.  %d .. %d \n", 
+	  	$counter_tag , $device_ID, $min, $max);          	
+          next COUNTER ;
+      }
       debug_print (3, join (' : ', @floats), "\n");
     
       # now backref'ing ... back down the pada tree ... OMG
@@ -155,7 +160,7 @@ foreach my $counter_tag (@counter_subset) {
       debug_printf (2, "%s\n%s\n",  $rrd_tpl , $valstr );
       debug_print (3 , Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ) ;
       # die "DEBUG ---- empty data set ";
-      next;
+      next COUNTER ;
     }
 
     # print $valstr , "\n";
@@ -188,7 +193,7 @@ exit;
 
 
 # implement SDM / modbus protocol syntax
-# return undef on failure
+# return ()  on failure
 # @floats  = SDM_query_cooked ($device_ID,  $min, $max  )
 sub SDM_query_cooked {
   my ($device_ID,  $min, $max  ) = @_ ;
@@ -208,7 +213,8 @@ sub SDM_querystring {
   # printf "SDM_querystring  at device %d from %d to %d, \n ", ( $d_ID, $min, $max );
 
   my $n_regs = $max +1 - $min;
-  if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
+  if ($n_regs > $MAX_nvals ) 
+  	{ die "configuration error for ID $d_ID - request size $n_regs exceeds max of $MAX_nvals" }
 
   my $start_addr = ($min -1 ) *2; 
   my $hex_regs = $n_regs *2;
@@ -232,6 +238,8 @@ sub SDM_querystring {
 sub SDM_parse_response {
   my ($response, $device_ID, $n_regs) = @_ ;   
 
+  return () unless (defined $response);
+  return () unless ( $#_ == 2 );
   my @rsp = string2array ($response);
   # print debug_hexdump( \@rsp) , "\n";
 
