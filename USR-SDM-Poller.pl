@@ -50,11 +50,15 @@ $SOCK->autoflush(1);
 debug_print (3, "-- connected ---\n") ;
 
 
-# ========== main loop over counters ================
-
+# we only want to access the subset we are configured for
 my @counter_subset = sort grep {  
 		$Counterlist{ $_ }->{ bus } eq $bustag ;
 	}   keys %Counterlist;
+
+
+# ========== main loop over counters ================	
+HEAD_OF_MAIN_LOOP:
+
 
 foreach my $counter_tag (@counter_subset) {
   my $counter_ptr = $Counterlist{ $counter_tag };
@@ -85,7 +89,7 @@ foreach my $counter_tag (@counter_subset) {
       #	printf " from %d to %d, \n ", $min, $max ;
 
       my @floats = SDM_query_cooked ($device_ID,  $min, $max  ) ;
-      print join (' : ', @floats), "\n";
+      # print join (' : ', @floats), "\n";
       # print Dumper (\@floats);
     
       # now backref'ing ... back down the pada tree ... OMG
@@ -95,16 +99,16 @@ foreach my $counter_tag (@counter_subset) {
 	      # print "$parno -> $i ";
 	      my $this_tag = $SDM_tags_by_parno{  $parno};
 	      next unless (defined $this_tag)  ;
-	      print "$parno -> $i => $this_tag ";
+	      # print "$parno -> $i => $this_tag ";
 	      $valhash{  $this_tag }->{ 'val' } = $floats [ $i ]
       }
-      print "\n";
+      # print "\n";
       # die " ==== healing - not yet ~~~~+~~";
 
   } # foreach my $slk (@selectors) {
 
   # --------- values per counter successfully retrieved
-  if (1) {
+  if (0) {
      print Data::Dumper->Dump (
 	[ \$counter_ptr ,  \%valhash ],  
 	[ qw(*counter_ptr   *valhash ) ] ) ;
@@ -112,7 +116,7 @@ foreach my $counter_tag (@counter_subset) {
 
   # loop over rrds
   foreach my $rrd_tag ( @{$counter_ptr->{ rrds }} ) {  
-    printf "counter %s -> rrd %s \n" , $counter_tag, $rrd_tag ;
+    # printf "counter %s -> rrd %s \n" , $counter_tag, $rrd_tag ;
     # $RRD_sprintf = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
     my $rrdfile = sprintf $RRD_sprintf, $RRD_dir, $RRD_prefix, $counter_tag, $rrd_tag;
     print $rrdfile , "\n";
@@ -120,35 +124,54 @@ foreach my $counter_tag (@counter_subset) {
     my $rrd_dhp = $RRD_definitions{$rrd_tag} ;
     my @rrd_fields  = @{$rrd_dhp->{ fields    }} ;
     my $rrd_tpl = join ( ':', @rrd_fields);
-    print $rrd_tpl , "\n";
+    # print $rrd_tpl , "\n";
 
     my $valstr ='N' ;
+    my $check_all_epty = 0 ;
     foreach my $rrd_field (@rrd_fields) {
       $valstr .= ':';	    
       my $val = $valhash{ $rrd_field }->{ 'val' } ;
-      $valstr .= $val if defined ($val);
+      if (defined ($val) and ($val ne '')) {
+        $valstr .= $val ;
+	$check_all_epty ||= 1;
+      }
+
     }
-    print $valstr , "\n";
+
+    unless ( $check_all_epty ) { 
+      printf "empty data set at counter %s -> rrd %s \n" , $counter_tag, $rrd_tag ;
+      print $rrd_tpl , "\n";
+      print $valstr , "\n";
+      print Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ;
+      die "DEBUG ---- empty data set ";
+      next;
+    }
+
+    # print $valstr , "\n";
     RRDs::update($rrdfile, '--template', $rrd_tpl, $valstr);
     if ( RRDs::error ) {
       print "error updating RRD:" . RRDs::error . "\n" ;
     } else {
-      print "rrd update succesful\n";
+	    # print "rrd update succesful\n";
     }
   # rrdupdate
   	#    my $valstr = join(':', ('N', @vals) );
     	#    debug_print (4, "values: $valstr  \n");
 	#    RRDs::update($infini_rrd, '--template', $rrd_stat_tpl, $valstr);
   }
-# time sync
+# TODO time sync
 
 
 
   # die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
   # if last counter maybe do some stuff, wait a bit  and start anew
   # time sync
-
+  sleep 2;
 } # foreach my $counter_tag (@counter_subset)
+
+# sleep 3 ;
+
+goto HEAD_OF_MAIN_LOOP ;
 
 # should never be here.... so no need to clean up?
 

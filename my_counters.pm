@@ -35,7 +35,7 @@ $Counterlist{'mains'} = {
 	ID =>  1,
 	Label => 'Hausanschluss',
         # direction => 1,
-        # selectors => [ ] ,
+        selectors => [ [ 'Ptot' ] ] ,
 	rrds => [ qw( totalP )],
 };
 
@@ -74,8 +74,9 @@ $Counterlist{'subs6'} = {
         ID =>  6,
         Label => 'Infini-LTO',
         direction => -1,
-	selectors => [ [ 'Ptot' ]  ] ,
+	# selectors => [ [ 'Ptot' ]  ] ,
 	rrds	=> [ qw( totalP E_bidir elbasics elquality )],
+	# rrds  => [ qw( totalP) ]
 };
 
 
