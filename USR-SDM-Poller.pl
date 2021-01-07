@@ -149,13 +149,23 @@ sub SDM_querystring {
 # @floats = SDM_parse_response ($response, $device_ID, $n_regs)
 sub SDM_parse_response {
   my ($response, $device_ID, $n_regs) = @_ ;   
+
+  my @rsp = string2array ($response);
+  print debug_hexdump( \@rsp) , "\n";
+
+  pop @rsp; pop @rsp; # last 2 bytes is crc, everything else goes init CRC check
+  my @digest = modbusCRC ( \@rsp );
+
+
   # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
-  my @unpacked = unpack ( 'C' x 3 . 'N' x $n_regs . 'H4' , $response ); 
+  # see https://perldoc.perl.org/functions/pack .... n or S 
+  my @unpacked = unpack ( 'C' x 3 . 'N' x $n_regs . 'n' , $response ); 
 
   my $u_len = scalar @unpacked ;
   # return undef if scalar @unpacked < $n_regs + 4;
-  my $r_crc = hex pop @unpacked ;
-  my @digest = modbusCRC ( \@unpacked );
+  my $r_crc =  pop @unpacked ;
+  # pop @rsp; pop @rsp;
+  # my @digest = modbusCRC ( \@rsp );
 
   my $r_did = shift @unpacked;
   unless ( $r_did  == $device_ID ) 
@@ -176,7 +186,7 @@ sub SDM_parse_response {
   	{ die "SDM response variable number mismatch"; } 
 
   printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
-    $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
+       $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
   # TODO don't die - if happens (shit) return undef;
   return ( @floats) ;
 }
