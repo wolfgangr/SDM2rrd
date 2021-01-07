@@ -104,7 +104,7 @@ foreach my $counter_tag (@counter_subset) {
   } # foreach my $slk (@selectors) {
 
   # --------- values per counter successfully retrieved
-  if (0) {
+  if (1) {
      print Data::Dumper->Dump (
 	[ \$counter_ptr ,  \%valhash ],  
 	[ qw(*counter_ptr   *valhash ) ] ) ;
@@ -116,7 +116,17 @@ foreach my $counter_tag (@counter_subset) {
     # $RRD_sprintf = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
     my $rrdfile = sprintf $RRD_sprintf, $RRD_dir, $RRD_prefix, $counter_tag, $rrd_tag;
     print $rrdfile , "\n";
+
+    my $rrd_dhp = $RRD_definitions{$rrd_tag} ;
+    my @rrd_fields  = @{$rrd_dhp->{ fields    }} ;
+    my $rrd_tpl = join ( ':', @rrd_fields);
+    print $rrd_tpl , "\n";
+
+
   # rrdupdate
+  	#    my $valstr = join(':', ('N', @vals) );
+    	#    debug_print (4, "values: $valstr  \n");
+	#    RRDs::update($infini_rrd, '--template', $rrd_stat_tpl, $valstr);
   }
 # time sync
 
