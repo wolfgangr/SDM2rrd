@@ -129,6 +129,12 @@ foreach my $counter_tag (@counter_subset) {
       $valstr .= $val if defined ($val);
     }
     print $valstr , "\n";
+    RRDs::update($rrdfile, '--template', $rrd_tpl, $valstr);
+    if ( RRDs::error ) {
+      print "error updating RRD:" . RRDs::error . "\n" ;
+    } else {
+      print "rrd update succesful\n";
+    }
   # rrdupdate
   	#    my $valstr = join(':', ('N', @vals) );
     	#    debug_print (4, "values: $valstr  \n");
@@ -138,7 +144,7 @@ foreach my $counter_tag (@counter_subset) {
 
 
 
-die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
+  # die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
   # if last counter maybe do some stuff, wait a bit  and start anew
   # time sync
 
