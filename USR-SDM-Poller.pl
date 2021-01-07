@@ -23,7 +23,7 @@ our $Debug = 3;
 require ('./my_debugs.pl');
 
 # our $sdm_def_file;
-our (@SDM_regs , %SDM_reg_by_tag , %SDM_selectors);
+our (@SDM_regs , %SDM_reg_by_tag , %SDM_selectors, %SDM_tags_by_parno);
 our $MAX_nvals ;
 require ('./extract-SDM-def.pm');
 
@@ -74,17 +74,31 @@ foreach my $counter_tag (@counter_subset) {
 	if ($parno > $max ) { $max = $parno ; }
       }  # foreach my $stg (@$slk)
 
-      # print Data::Dumper->Dump ( 
-      #   	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
-      #		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
+      print Data::Dumper->Dump ( 
+         	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
+      		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
 
       #	printf " from %d to %d, \n ", $min, $max ;
 
       my @floats = SDM_query_cooked ($device_ID,  $min, $max  ) ;
       print join (' : ', @floats), "\n";
       # print Dumper (\@floats);
-
-die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
+    
+      # now backref'ing ... back down the pada tree ... OMG
+      my $i = -1;
+      foreach my $parno ( $min .. $max ) {
+	      $i++;
+	      # print "$parno -> $i ";
+	      my $this_tag = $SDM_tags_by_parno{  $parno};
+	      next unless (defined $this_tag)  ;
+	      print "$parno -> $i => $this_tag ";
+	      # next if undef ($this_par);
+	      # my $this_label = $this_par->{ def }->{ 
+	      # $i++;
+	      $valhash{  $this_tag }->{ 'val' } = $floats [ $i ]
+      }
+      print "\n";
+      # die " ==== healing - not yet ~~~~+~~";
 
   } # foreach my $slk (@selectors) {
 
@@ -93,7 +107,10 @@ die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # loop over rrds 
 # rrdupdate
 # time sync
-
+ print Data::Dumper->Dump (
+	[ \$counter_ptr ,  \%valhash ],  
+	[ qw(*counter_ptr   *valhash ) ] ) ;
+die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
 
 } # foreach my $counter_tag (@counter_subset)
 

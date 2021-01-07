@@ -12,12 +12,12 @@ our $MAX_nvals = 40 ; # maximum number of values accepted in a single reques
 our $sdm_def_file = "SDM630proto-usage.csv" ;
 
 
-my ($SDM_regs, $SDM_reg_by_tag , $SDM_selectors ) = ( read_csv_SDM_def ( $sdm_def_file ));
+my ($SDM_regs, $SDM_reg_by_tag ,  $SDM_selectors,  $SDM_tags_by_parno ) = ( read_csv_SDM_def ( $sdm_def_file ));
 
-our @SDM_regs       = @{$SDM_regs} ;
-our %SDM_reg_by_tag = %{$SDM_reg_by_tag}  ;
-our %SDM_selectors  = %{$SDM_selectors}  ;
-
+our @SDM_regs         = @{$SDM_regs} ;
+our %SDM_reg_by_tag   = %{$SDM_reg_by_tag}  ;
+our %SDM_selectors    = %{$SDM_selectors}  ;
+our %SDM_tags_by_parno = %{$SDM_tags_by_parno} ;
 
 # exit;
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,6 +31,7 @@ sub read_csv_SDM_def {
 
   my @regs;
   my %reg_by_tag ;
+  my %tags_by_parno ;
   my %selectors ;
   while (<$IN>) {
 
@@ -65,12 +66,12 @@ sub read_csv_SDM_def {
 			selector => $selector
 		) ;
 		$reg_by_tag{$tag} = \%this ;
-
+		$tags_by_parno{$par_no} = $tag ;
 		$selectors{$selector}{$par_no}= $tag ;
 	}
   }
   close $filename;
-  return (\@regs,  \%reg_by_tag , \%selectors )  ;
+  return (\@regs,  \%reg_by_tag , \%selectors , \%tags_by_parno )  ;
 }
 
 1;
