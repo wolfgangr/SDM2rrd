@@ -8,18 +8,11 @@ use Data::Dumper  qw(Dumper);
 our $Debug ; # = 3;
 require ('./my_debugs.pl');
 
-
+our $MAX_nvals = 40 ; # maximum number of values accepted in a single reques
 our $sdm_def_file = "SDM630proto-usage.csv" ;
 
 
-# our @SDM_regs ;
-# our $SDM_reg_by_tag ;
-# our $SDM_selectors ;
-# my $SDM_regs ;
-# two line test code and usage guide
-# ( \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors)  = ( read_csv_SDM_def ( $sdm_def_file ));
 my ($SDM_regs, $SDM_reg_by_tag , $SDM_selectors ) = ( read_csv_SDM_def ( $sdm_def_file ));
-# debug_dumper ( 3, $SDM_regs, $SDM_reg_by_tag , $SDM_selectors );
 
 our @SDM_regs       = @{$SDM_regs} ;
 our %SDM_reg_by_tag = %{$SDM_reg_by_tag}  ;

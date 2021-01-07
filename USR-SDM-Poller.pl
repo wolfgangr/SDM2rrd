@@ -21,8 +21,9 @@ our $Debug = 3;
 
 require ('./my_debugs.pl');
 
-our $sdm_def_file;
+# our $sdm_def_file;
 our (@SDM_regs , %SDM_reg_by_tag , %SDM_selectors);
+our $MAX_nvals ;
 require ('./extract-SDM-def.pm');
 
 our %Counterlist;
@@ -53,16 +54,27 @@ foreach my $counter_tag (@counter_subset) {
       my $min = 999999;
       my $max = -1 ;
       foreach my $stg (@$slk) {
-
+        my $sidx = $SDM_reg_by_tag{ $stg };
+        $valhash{ $stg }->{ def } = $sidx;
+        my $parno = $sidx->{ par_no };
+	if ($parno < $min ) { $min = $parno ; }
+	if ($parno > $max ) { $max = $parno ; }
+      }  # foreach my $stg (@$slk)
 
       print Data::Dumper->Dump ( 
-        	[ \@counter_subset, $counter_ptr, \@selectors, $slk, $stg ], 
-		[ qw(*counter_subset *counter_ptr  *selectors  *slk  *stg ) ] ) ;
+        	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
+		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
 
+      my $n_regs = $max +1 - $min;
+      if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
 
-          die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+      my $start_addr = ($min -1 ) *2;
+      my $hex_regs = $n_regs *2;
+      printf "retreiving %d params from %d to %d, start at 0x%04x, count 0x%04x\n ", 
+     		$n_regs, $min, $max,  $start_addr, $hex_regs  ;
 
-      } # foreach my $stg (@$slk) {
+die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
+
   } # foreach my $slk (@selectors) {
 
 
