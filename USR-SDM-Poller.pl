@@ -153,9 +153,18 @@ sub SDM_parse_response {
   my @rsp = string2array ($response);
   print debug_hexdump( \@rsp) , "\n";
 
-  pop @rsp; pop @rsp; # last 2 bytes is crc, everything else goes init CRC check
+  # last 2 bytes is crc, everything else goes into CRC check
+  my $crc_hi = pop @rsp; # poping from the end, crc is lo byte first order
+  my $crc_lo = pop @rsp; 
+  # pop @rsp;
   my @digest = modbusCRC ( \@rsp );
-
+  #printf ("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n", 
+  #	  @digest, $crc_hi , $crc_lo );
+  unless ( $digest[1] == $crc_hi and $digest[0] == $crc_lo )  	{ 
+	  printf ("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
+		@digest, $crc_hi , $crc_lo );
+	  die sprintf "SDM response crc mismatch" 
+  }
 
   # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
   # see https://perldoc.perl.org/functions/pack .... n or S 
