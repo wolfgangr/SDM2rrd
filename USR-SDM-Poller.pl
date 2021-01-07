@@ -26,7 +26,7 @@ our @RETRIES = qw ( 10 100 1000 10000 ) ;
 my $interval =5 ; # seconds between runs
 # my $interval_shift =3.7 ; # seconds shift
 
-our $Debug = 3;
+our $Debug = 2;
 
 
 require ('./my_debugs.pl');
@@ -115,7 +115,7 @@ foreach my $counter_tag (@counter_subset) {
 	      debug_print (5, "$parno -> $i => $this_tag ");
 	      $valhash{  $this_tag }->{ 'val' } = $floats [ $i ]
       }
-      debug_print "\n";
+      debug_print (5, "\n");
       # die " ==== healing - not yet ~~~~+~~";
 
   } # foreach my $slk (@selectors) {
@@ -139,21 +139,21 @@ foreach my $counter_tag (@counter_subset) {
     debug_print(3, $rrd_tpl , "\n");
 
     my $valstr ='N' ;
-    my $check_all_epty = 0 ;
+    my $check_all_empty = 0 ;
     foreach my $rrd_field (@rrd_fields) {
       $valstr .= ':';	    
       my $val = $valhash{ $rrd_field }->{ 'val' } ;
       if (defined ($val) and ($val ne '')) {
         $valstr .= $val ;
-	$check_all_epty ||= 1;
+	$check_all_empty ||= 1;
       }
 
     }
 
-    unless ( $check_all_epty ) { 
-      debug_printf (1 "empty data set at counter %s -> rrd %s \n" , $counter_tag, $rrd_tag );
+    unless ( $check_all_empty ) { 
+      debug_printf (1 ,"empty data set at counter %s -> rrd %s \n" , $counter_tag, $rrd_tag );
       debug_printf (2, "%s\n%s\n",  $rrd_tpl , $valstr );
-      debug_print (3 Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ) ;
+      debug_print (3 , Data::Dumper->Dump ([ \$counter_ptr  ],[ qw(*counter_ptr    ) ] ) ) ;
       # die "DEBUG ---- empty data set ";
       next;
     }

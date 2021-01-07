@@ -1,3 +1,7 @@
 *.swp
 rrd/*
 test
+rrd_old/*
+rrd2csv.pl
+rrdtest.pl
+
