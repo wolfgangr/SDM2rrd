@@ -122,7 +122,13 @@ foreach my $counter_tag (@counter_subset) {
     my $rrd_tpl = join ( ':', @rrd_fields);
     print $rrd_tpl , "\n";
 
-
+    my $valstr ='N' ;
+    foreach my $rrd_field (@rrd_fields) {
+      $valstr .= ':';	    
+      my $val = $valhash{ $rrd_field }->{ 'val' } ;
+      $valstr .= $val if defined ($val);
+    }
+    print $valstr , "\n";
   # rrdupdate
   	#    my $valstr = join(':', ('N', @vals) );
     	#    debug_print (4, "values: $valstr  \n");
