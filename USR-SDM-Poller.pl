@@ -71,7 +71,7 @@ my $lastrun = Time::HiRes::time();
 my $modulo = (int ($lastrun) + $interval_shift) % $interval;
 my $nextrun = $lastrun - $modulo + $interval;
 
-debug_printf (0, "cycletimer: lastrun=%.2f, nextrun=%.2f, diff=%.2f \n", 
+debug_printf (3, "cycletimer: lastrun=%.2f, nextrun=%.2f, diff=%.2f \n", 
 	$lastrun, $nextrun , $nextrun - $lastrun);
 
 
@@ -174,18 +174,20 @@ COUNTER: foreach my $counter_tag (@counter_subset) {
       debug_print(4, "rrd update succesful\n");
     }
   }
-# TODO time sync
 
-
-
-  # if last counter maybe do some stuff, wait a bit  and start anew
-  # time sync
-  usleep 1e3 ;
+  # this is just for good feeling... 
+  usleep 1e2 ;
 } # foreach my $counter_tag (@counter_subset)
 
 # sleep 5 ;
 
+my $now = Time::HiRes::time();
+my $sleep = $nextrun - $now ;
+debug_printf (3, "\tcyclesleeper: lastrun=%.2f, nextrun=%.2f, now=%.2f, sleep=%.2f \n", 
+	$lastrun, $nextrun , $now , $sleep );
 
+# this one accepts fractional seconds 
+Time::HiRes::sleep( $sleep  ); 
 
 goto HEAD_OF_MAIN_LOOP ;
 
