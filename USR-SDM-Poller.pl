@@ -33,10 +33,21 @@ require ('./my_counters.pm');
 our %RRD_definitions ;
 require ('./rrd_def.pm');
 
-# == socket connection hat to go before loop =======
+# == set up socket connection =====
 
 
-# loop over counters
+# my $EOL = "\015\012";
+
+my $sock = IO::Socket::INET->new( Proto     => "tcp",
+                                  PeerAddr  => $remotehost,
+                                  PeerPort  => $remoteport,
+           )     || die "cannot connect to port $remoteport on $remotehost";
+$sock->autoflush(1);
+
+debug_print (3, "-- connected ---\n") ;
+
+
+# ========== main loop over counters ================
 
 my @counter_subset = sort grep {  
 		$Counterlist{ $_ }->{ bus } eq $bustag ;
@@ -44,6 +55,7 @@ my @counter_subset = sort grep {
 
 foreach my $counter_tag (@counter_subset) {
   my $counter_ptr = $Counterlist{ $counter_tag };
+  my $device_ID = $counter_ptr->{ ID } ;
   # instantiate data cache
   my %valhash =();
   # loop over selectors
@@ -65,6 +77,7 @@ foreach my $counter_tag (@counter_subset) {
         	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
 		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
 
+      # see SDM protocol to understand adress acrobatics
       my $n_regs = $max +1 - $min;
       if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
 
@@ -72,6 +85,25 @@ foreach my $counter_tag (@counter_subset) {
       my $hex_regs = $n_regs *2;
       printf "retreiving %d params from %d to %d, start at 0x%04x, count 0x%04x\n ", 
      		$n_regs, $min, $max,  $start_addr, $hex_regs  ;
+
+      # buffer to construct query: array of byte as numbers
+      my @tosend ;
+
+      my $cmd_token = 0x04; # Modbus cmd to query register
+      my $EOL = "\015\012";
+
+      push @tosend, $device_ID, $cmd_token ; 
+      push  @tosend , number2bytes ( $start_addr , 2);
+      push  @tosend , number2bytes ( $hex_regs , 2);
+
+      my @digest = modbusCRC ( \@tosend );
+      push  @tosend , @digest ;
+
+      debug_hexdump (  \@tosend ) ;
+
+      my $sendstring = array2string ( @tosend ) ;
+      print str_hexdump($sendstring);
+
 
 die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
 
@@ -119,32 +151,6 @@ print "\n";
 my $sendstring = array2string ( @tosend ) ;
 
 print str_hexdump($sendstring);
-
-#------- create connection
-
-# https://www.tutorialspoint.com/perl/perl_socket_programming.htm
-
-# my $iaddr   = inet_aton($remotehost)       || die "no host: $remotehost";
-# my $paddr   = sockaddr_in($remoteport, $iaddr);
-# my $proto   = getprotobyname("tcp");
-# socket(my $sock, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
-# connect($sock, $paddr)              || die "connect: $!";
-
-
-# socket( SOCKET, pack_sockaddr_in($remoteport, inet_aton($remotehost)))
-#    or die "Can't bind to port $remoteport at host $remotehost\n Reason:  $! \n";
-
-
-my $EOL = "\015\012";
-
-my $sock = IO::Socket::INET->new( Proto     => "tcp",
-                                  PeerAddr  => $remotehost,
-                                  PeerPort  => $remoteport,
-           )     || die "cannot connect to port $remoteport on $remotehost";
-$sock->autoflush(1);
-
-print "-- connected ---\n";
-
 print $sock $sendstring ;
 # my $response = <$sock> ;
 
