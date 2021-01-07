@@ -74,15 +74,15 @@ foreach my $counter_tag (@counter_subset) {
 	if ($parno > $max ) { $max = $parno ; }
       }  # foreach my $stg (@$slk)
 
-      print Data::Dumper->Dump ( 
-        	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
-		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
+      # print Data::Dumper->Dump ( 
+      #   	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
+      #		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
 
-	printf " from %d to %d, \n ", $min, $max ;
+      #	printf " from %d to %d, \n ", $min, $max ;
 
       my @floats = SDM_query_cooked ($device_ID,  $min, $max  ) ;
-
-      print Dumper (\@floats);
+      print join (' : ', @floats), "\n";
+      # print Dumper (\@floats);
 
 die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
 
@@ -123,7 +123,7 @@ sub SDM_query_cooked {
 sub SDM_querystring {	
   my ( $d_ID, $min, $max ) = @_ ;
 
-  printf "SDM_querystring  at device %d from %d to %d, \n ", ( $d_ID, $min, $max );
+  # printf "SDM_querystring  at device %d from %d to %d, \n ", ( $d_ID, $min, $max );
 
   my $n_regs = $max +1 - $min;
   if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
@@ -151,7 +151,7 @@ sub SDM_parse_response {
   my ($response, $device_ID, $n_regs) = @_ ;   
 
   my @rsp = string2array ($response);
-  print debug_hexdump( \@rsp) , "\n";
+  # print debug_hexdump( \@rsp) , "\n";
 
   # last 2 bytes is crc, everything else goes into CRC check
   my $crc_hi = pop @rsp; # poping from the end, crc is lo byte first order
@@ -161,9 +161,9 @@ sub SDM_parse_response {
   #printf ("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n", 
   #	  @digest, $crc_hi , $crc_lo );
   unless ( $digest[1] == $crc_hi and $digest[0] == $crc_lo )  	{ 
-	  printf ("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
+	  printf("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
 		@digest, $crc_hi , $crc_lo );
-	  die sprintf "SDM response crc mismatch" 
+	  die sprintf "SDM response crc mismatch" ; 
   }
 
   # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
@@ -173,8 +173,6 @@ sub SDM_parse_response {
   my $u_len = scalar @unpacked ;
   # return undef if scalar @unpacked < $n_regs + 4;
   my $r_crc =  pop @unpacked ;
-  # pop @rsp; pop @rsp;
-  # my @digest = modbusCRC ( \@rsp );
 
   my $r_did = shift @unpacked;
   unless ( $r_did  == $device_ID ) 
@@ -194,8 +192,8 @@ sub SDM_parse_response {
   unless ( scalar @floats == $n_regs) 
   	{ die "SDM response variable number mismatch"; } 
 
-  printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
-       $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
+  # printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
+  #     $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
   # TODO don't die - if happens (shit) return undef;
   return ( @floats) ;
 }
