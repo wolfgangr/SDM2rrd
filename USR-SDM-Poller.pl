@@ -78,55 +78,7 @@ foreach my $counter_tag (@counter_subset) {
         	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
 		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
 
-if (0) { 
-   # see SDM protocol to understand adress acrobatics
-      my $n_regs = $max +1 - $min;
-      if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
-
-      my $start_addr = ($min -1 ) *2;
-      my $hex_regs = $n_regs *2;
-      printf "retreiving %d params from %d to %d, start at 0x%04x, count 0x%04x\n ", 
-     		$n_regs, $min, $max,  $start_addr, $hex_regs  ;
-
-      # buffer to construct query: array of byte as numbers
-      my @tosend ;
-
-      my $cmd_token = 0x04; # Modbus cmd to query register
-      # my $EOL = "\015\012";
-
-      push @tosend, $device_ID, $cmd_token ; 
-      push  @tosend , number2bytes ( $start_addr , 2);
-      push  @tosend , number2bytes ( $hex_regs , 2);
-
-      my @digest = modbusCRC ( \@tosend );
-      push  @tosend , @digest ;
-
-      debug_hexdump (  \@tosend ) ;
-
-      my $sendstring = array2string ( @tosend ) ;
-      print str_hexdump($sendstring);
- 
-      # ~~~~~~~~~~~~~ perform physical query ~~~~~~~~~~~
-      print $sock $sendstring ; 
-      my $response ;
-      # this better might be catched!
-      # 	see https://perldoc.perl.org/functions/sysread
-      # <id><cmd><len> ..... payload ..... <crc>
-      #  1    1    1      $n_regs*4          2
-      my $qr_status = (sysread ( $sock, $response, $n_regs*4 +5 +10 ) ) ; #  or die "not enought data received";
-      
-      my @response = string2array ($response);
-      print debug_hexdump( \@response) , "\n";
-
-      # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
-      my @unpacked = unpack ( 'H2' x 3 . 'N' x $n_regs . 'H4' , $response ); 
-      print Dumper (\@unpacked);
-
-      # to do here: consistency check CRC and length
-      
-      my @floats = map { decodeIEE754($_) } @unpacked[3.. $n_regs + 2 ] ;
- } # ---- end if (0)
-      my @floats = SDM_query_cooked ($device_ID,  $min, $max  )
+      my @floats = SDM_query_cooked ($device_ID,  $min, $max  ) ;
 
       print Dumper (\@floats);
 
@@ -155,7 +107,8 @@ exit;
 # return undef on failure
 # @floats  = SDM_query_cooked ($device_ID,  $min, $max  )
 sub SDM_query_cooked {
-  my ($qry) = SDM_querystring ( @_ );
+  my ($device_ID,  $min, $max  ) ;
+  my ($qry) = SDM_querystring ($device_ID,  $min, $max  ) ;
   my $n_regs = $max +1 - $min;
   # my $expected_bytes = (($max - $min ) *4 ) + 9 ; 
   my $response = query_socket ($SOCK, $qry, $n_regs *4 +5 ) ;
@@ -165,7 +118,7 @@ sub SDM_query_cooked {
 
 # perform pre query protocol building	
 sub SDM_querystring {	
-  my ( $d_id, $min, $max ) = shift;
+  my ( $d_ID, $min, $max ) = shift;
 
   my $n_regs = $max +1 - $min;
   if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
@@ -205,9 +158,9 @@ sub SDM_parse_response {
 # $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
 sub query_socket {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = shift; 
-  print $sock $sendstring ; 
+  print $sock $qry ; 
   my $response ;
-  my $qr_status = (sysread ( $sock, $response, $n_regs*4 +5 +10 ) ) ;
+  my $qr_status = (sysread ( $sock, $response,  $nexp) ) ;
   # if happens (shit) return undef;
   return $response;
 }
