@@ -78,6 +78,8 @@ foreach my $counter_tag (@counter_subset) {
         	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
 		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
 
+	printf " from %d to %d, \n ", $min, $max ;
+
       my @floats = SDM_query_cooked ($device_ID,  $min, $max  ) ;
 
       print Dumper (\@floats);
@@ -107,7 +109,8 @@ exit;
 # return undef on failure
 # @floats  = SDM_query_cooked ($device_ID,  $min, $max  )
 sub SDM_query_cooked {
-  my ($device_ID,  $min, $max  ) ;
+  my ($device_ID,  $min, $max  ) = @_ ;
+  # printf "SDM_query_cooked  at device %d from %d to %d, \n ", ( $d_ID, $min, $max );
   my ($qry) = SDM_querystring ($device_ID,  $min, $max  ) ;
   my $n_regs = $max +1 - $min;
   # my $expected_bytes = (($max - $min ) *4 ) + 9 ; 
@@ -118,7 +121,9 @@ sub SDM_query_cooked {
 
 # perform pre query protocol building	
 sub SDM_querystring {	
-  my ( $d_ID, $min, $max ) = shift;
+  my ( $d_ID, $min, $max ) = @_ ;
+
+  printf "SDM_querystring  at device %d from %d to %d, \n ", ( $d_ID, $min, $max );
 
   my $n_regs = $max +1 - $min;
   if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
@@ -157,7 +162,7 @@ sub SDM_parse_response {
 # returns answer string or undef upon failure
 # $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
 sub query_socket {
-  my ($sock, $qry, $nexp, $nrtry, $w_us) = shift; 
+  my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
   print $sock $qry ; 
   my $response ;
   my $qr_status = (sysread ( $sock, $response,  $nexp) ) ;
