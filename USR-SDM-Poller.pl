@@ -8,7 +8,8 @@ use Data::Dumper ;
 use Digest::CRC ;
 # use Socket;
 use IO::Socket;
-
+use Time::HiRes qw( usleep );
+use RRDs();
 
 my $remoteport = 502 ;
 # my $remotehost = "192.168.1.241";
@@ -38,11 +39,11 @@ require ('./rrd_def.pm');
 
 # my $EOL = "\015\012";
 
-my $sock = IO::Socket::INET->new( Proto     => "tcp",
+my $SOCK = IO::Socket::INET->new( Proto     => "tcp",
                                   PeerAddr  => $remotehost,
                                   PeerPort  => $remoteport,
            )     || die "cannot connect to port $remoteport on $remotehost";
-$sock->autoflush(1);
+$SOCK->autoflush(1);
 
 debug_print (3, "-- connected ---\n") ;
 
@@ -77,7 +78,8 @@ foreach my $counter_tag (@counter_subset) {
         	[ \@counter_subset, $counter_ptr, \@selectors, $slk, \%valhash, ], 
 		[ qw(*counter_subset *counter_ptr  *selectors  *slk   *valhash  ) ] ) ;
 
-      # see SDM protocol to understand adress acrobatics
+if (0) { 
+   # see SDM protocol to understand adress acrobatics
       my $n_regs = $max +1 - $min;
       if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
 
@@ -123,6 +125,9 @@ foreach my $counter_tag (@counter_subset) {
       # to do here: consistency check CRC and length
       
       my @floats = map { decodeIEE754($_) } @unpacked[3.. $n_regs + 2 ] ;
+ } # ---- end if (0)
+      my @floats = SDM_query_cooked ($device_ID,  $min, $max  )
+
       print Dumper (\@floats);
 
 die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
@@ -138,74 +143,74 @@ die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 } # foreach my $counter_tag (@counter_subset)
 
-
-
-
-#=========== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# data below hat to be extracted from counter /rrd config
-
-my $device = 0x01;
-my $cmd = 0x04;
-my $startadd = 0;
-my $numdata = 76 ; # aka 0x4c
-
-
-# data format of my choice: array of byte as numbers
-
-my @tosend ;
-push  @tosend, $device, $cmd ; 
-
-push  @tosend , number2bytes ( $startadd , 2);
-push  @tosend , number2bytes ( $numdata , 2);
-
-my @digest = modbusCRC ( \@tosend );
-push  @tosend , @digest ;
-
-
-# print Dumper (@tosend) ;
-
-debug_hexdump ( \@tosend ) ;
-print "\n";
-
-my $sendstring = array2string ( @tosend ) ;
-
-print str_hexdump($sendstring);
-print $sock $sendstring ;
-# my $response = <$sock> ;
-
-my $response ;
-my $byte;
-# while (sysread($sock, $byte, 1) == 1) {
-#	# print STDOUT $byte;
-#	$response .= $byte ;
-#	print str_hexdump($response);
-#
-#}
-# print "loop ended ---- \n";
-
-(read($sock, $response, 157))  or die "not enought data received";
-
-# print str_hexdump($response);
-my @response = string2array ($response);
-print debug_hexdump( \@response) , "\n";
-
-my @unpacked = unpack ( 'H2' x 3 . 'N' x 38 . 'H4' , $response ); 
-
-print Dumper (\@unpacked);
-
-my @floats = map { decodeIEE754($_) } @unpacked[3..40] ;
-print Dumper (\@floats);
-
-
-
-
-
+# should never be here.... so no nedd to clean up?
 
 
 exit;
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# implement SDM / modbus protocol syntax
+# return undef on failure
+# @floats  = SDM_query_cooked ($device_ID,  $min, $max  )
+sub SDM_query_cooked {
+  my ($qry) = SDM_querystring ( @_ );
+  my $n_regs = $max +1 - $min;
+  # my $expected_bytes = (($max - $min ) *4 ) + 9 ; 
+  my $response = query_socket ($SOCK, $qry, $n_regs *4 +5 ) ;
+  return SDM_parse_response ($response, $device_ID, $n_regs) ;
+}
+
+
+# perform pre query protocol building	
+sub SDM_querystring {	
+  my ( $d_id, $min, $max ) = shift;
+
+  my $n_regs = $max +1 - $min;
+  if ($n_regs > $MAX_nvals ) { die "configuration error - request size $n_regs exceeds max of $MAX_nvals" }
+
+  my $start_addr = ($min -1 ) *2; 
+  my $hex_regs = $n_regs *2;
+  my $expect_bytes = $n_regs*4 +5;
+  # buffer to construct query: array of byte as numbers
+  my @tosend ;
+  my $cmd_token = 0x04; # Modbus cmd to query register
+
+  push @tosend, $d_ID, $cmd_token ;
+  push @tosend , number2bytes ( $start_addr , 2);
+  push @tosend , number2bytes ( $hex_regs , 2);
+
+  my @digest = modbusCRC ( \@tosend );
+  push  @tosend , @digest ;
+
+  return array2string ( @tosend ) ;
+} 
+
+# parse SDM response, 
+# @floats = SDM_parse_response ($response, $device_ID, $n_regs)
+sub SDM_parse_response {
+  my ($response, $device_ID, $n_regs) = @_ ;   
+  # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
+  my @unpacked = unpack ( 'H2' x 3 . 'N' x $n_regs . 'H4' , $response ); 
+
+  my @floats = map { decodeIEE754($_) } @unpacked[3.. $n_regs + 2 ] ;
+
+  # if happens (shit) return undef;
+  return ( @floats) ;
+}
+
+# perform physical socket queries with retry and timeouts
+# returns answer string or undef upon failure
+# $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
+sub query_socket {
+  my ($sock, $qry, $nexp, $nrtry, $w_us) = shift; 
+  print $sock $sendstring ; 
+  my $response ;
+  my $qr_status = (sysread ( $sock, $response, $n_regs*4 +5 +10 ) ) ;
+  # if happens (shit) return undef;
+  return $response;
+}
 
 
 # decodeIEE754
@@ -281,21 +286,6 @@ sub modbusCRC {
     $ctx->add ( chr $x) ;
   }
   return  reverse number2bytes ($ctx->digest, 2) ;
-}
-
-# don't use this, this is untested
-sub mymodbusCRC {
-  my $ary = shift @_;
-  my $crc = 0xffff;
-  foreach my $x ( @$ary ) {
-    # $ctx->add ($x) ;
-    foreach my $i (8 .. 1) {
-      if ($x & 0x01 ) { $crc ^= 0xA001 ; }
-      $x >>= 1;      
-    }
-  }
-  # return number2bytes ( $crc, 2 ) ;
-  return $crc ;
 }
 
 
