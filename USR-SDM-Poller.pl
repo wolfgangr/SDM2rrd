@@ -90,7 +90,7 @@ foreach my $counter_tag (@counter_subset) {
       my @tosend ;
 
       my $cmd_token = 0x04; # Modbus cmd to query register
-      my $EOL = "\015\012";
+      # my $EOL = "\015\012";
 
       push @tosend, $device_ID, $cmd_token ; 
       push  @tosend , number2bytes ( $start_addr , 2);
@@ -103,7 +103,23 @@ foreach my $counter_tag (@counter_subset) {
 
       my $sendstring = array2string ( @tosend ) ;
       print str_hexdump($sendstring);
+ 
+      # ~~~~~~~~~~~~~ perform physical query ~~~~~~~~~~~
+      print $sock $sendstring ; 
+      my $response ;
+      # this better might be catched!
+      (read ( $sock, $response, $n_regs*4 +5 ) )  or die "not enought data received";
+      
+      my @response = string2array ($response);
+      print debug_hexdump( \@response) , "\n";
 
+      my @unpacked = unpack ( 'H2' x 3 . 'N' x $n_regs . 'H4' , $response ); 
+      print Dumper (\@unpacked);
+
+      # to do here: consistency check CRC and length
+      
+      my @floats = map { decodeIEE754($_) } @unpacked[3.. $n_regs + 2 ] ;
+      print Dumper (\@floats);
 
 die " ==== bleeding edge ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+~~";
 
