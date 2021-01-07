@@ -23,8 +23,8 @@ my $bustag = 'tcp-241';
 our @RETRIES = qw ( 10 100 1000 10000 ) ; 
 
 
-my $interval =5 ; # seconds between runs
-# my $interval_shift =3.7 ; # seconds shift
+my $interval = 15 ; # seconds between runs
+my $interval_shift = 7 ; # seconds shift from even interval
 
 our $Debug = 1;
 
@@ -64,15 +64,16 @@ my @counter_subset = sort grep {
 		$Counterlist{ $_ }->{ bus } eq $bustag ;
 	}   keys %Counterlist;
 
-
-
-	
 # ========== main loop over counters ================	
 HEAD_OF_MAIN_LOOP:
-
  
-# my $lastrun = Time::HiRes::time();
-# my $step = $lastrun +
+my $lastrun = Time::HiRes::time();
+my $modulo = (int ($lastrun) + $interval_shift) % $interval;
+my $nextrun = $lastrun - $modulo + $interval;
+
+debug_printf (0, "cycletimer: lastrun=%.2f, nextrun=%.2f, diff=%.2f \n", 
+	$lastrun, $nextrun , $nextrun - $lastrun);
+
 
 
 COUNTER: foreach my $counter_tag (@counter_subset) {
@@ -179,10 +180,12 @@ COUNTER: foreach my $counter_tag (@counter_subset) {
 
   # if last counter maybe do some stuff, wait a bit  and start anew
   # time sync
-  usleep 1e6 ;
+  usleep 1e3 ;
 } # foreach my $counter_tag (@counter_subset)
 
-sleep 5 ;
+# sleep 5 ;
+
+
 
 goto HEAD_OF_MAIN_LOOP ;
 
