@@ -26,7 +26,7 @@ our @RETRIES = qw ( 10 100 1000 10000 ) ;
 my $interval =5 ; # seconds between runs
 # my $interval_shift =3.7 ; # seconds shift
 
-our $Debug = 2;
+our $Debug = 1;
 
 
 require ('./my_debugs.pl');
@@ -238,7 +238,11 @@ sub SDM_querystring {
 sub SDM_parse_response {
   my ($response, $device_ID, $n_regs) = @_ ;   
 
-  return () unless (defined $response);
+  unless (defined $response) {
+	  debug_printf(3, "low level read timeout");
+	  return ();
+  }
+
   return () unless ( $#_ == 2 );
   my @rsp = string2array ($response);
   # print debug_hexdump( \@rsp) , "\n";
@@ -251,9 +255,9 @@ sub SDM_parse_response {
   #printf ("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n", 
   #	  @digest, $crc_hi , $crc_lo );
   unless ( $digest[1] == $crc_hi and $digest[0] == $crc_lo )  	{ 
-	  printf("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
+	  debug_printf( 5, "digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
 		@digest, $crc_hi , $crc_lo );
-	  die sprintf "SDM response crc mismatch" ; 
+	  debug_printf( 3, "SDM response crc mismatch" ); 
   }
 
   # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
@@ -265,22 +269,28 @@ sub SDM_parse_response {
   my $r_crc =  pop @unpacked ;
 
   my $r_did = shift @unpacked;
-  unless ( $r_did  == $device_ID ) 
-  	{ die sprintf "SDM response device ID mismatch 0x%02x -> 0x%02x ", $device_ID, $r_did  ; }
+  unless ( $r_did  == $device_ID ) {
+  	debug_printf(3, "SDM response device ID mismatch 0x%02x -> 0x%02x ", $device_ID, $r_did ) ; 
+	return ();
+  }
 
   my $r_cmd = shift @unpacked ;
-  unless ( $r_cmd  == 0x04 )
-  	{ die sprintf "SDM response cmd ID mismatch - expect 0x04, got 0x%02x ",  $r_cmd  ; }
+  unless ( $r_cmd  == 0x04 ) {
+  	debug_printf(3, "SDM response cmd ID mismatch - expect 0x04, got 0x%02x ",  $r_cmd ) ; 
+        return ();
+  }
 
   my $r_len = shift @unpacked ;
   my $r_len_want = $n_regs *4  ;
-  unless ( $r_len  == $r_len_want )
-	{ die sprintf "SDM indicated response length mismatch - want %d, got %d", $r_len_want, $r_len   ; }
-
+  unless ( $r_len  == $r_len_want ) {
+	debug_printf(3, "SDM indicated response length mismatch - want %d, got %d", $r_len_want, $r_len ) ; 
+	return ();
+  }
 
   my @floats = map { decodeIEE754($_) } @unpacked ;
-  unless ( scalar @floats == $n_regs) 
-  	{ die "SDM response variable number mismatch"; } 
+  unless ( scalar @floats == $n_regs) { 
+	  debug_print (3, "SDM response variable number mismatch" ) ;
+  } 
 
   # printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
   #     $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
