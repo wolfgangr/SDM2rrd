@@ -376,11 +376,12 @@ sub query_socket {
   return undef ;  
 }
 
+# this is for socket debugging, not for regular use
 sub query_socket_debug {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
   # print $sock $qry ; 
   
-  # hadr overwrite TODO defaults?
+  # hadr overwrite tODO defaults?
   # 1 sec dumb wait runs nice for hours
   # 0.1 sec runs OK for some minutes only
   $nrtry = 20;
@@ -397,7 +398,7 @@ sub query_socket_debug {
     # https://perldoc.perl.org/functions/sysread
     # http://man.he.net/man2/read
      
-    # TODO die "error in cleanup reading from socket : $!" unless (defined $rv) ;
+    # tODO die "error in cleanup reading from socket : $!" unless (defined $rv) ;
     
     unless ( $rv ) {
 	    print "line clean at read No $_ \n";
@@ -414,7 +415,7 @@ sub query_socket_debug {
   printf(' ------ completed $sock->send($qry) , $qry=%s' . "\n", debug_str_hexdump($qry) ) ;
 
 
-  usleep ($w_us * 1) ; # TODO increase after test to reasonable wait time
+  usleep ($w_us * 1) ; # tODO increase after test to reasonable wait time
   
   
   # usually one shot is OK, but when the line goes out of sync, retries may help
@@ -423,7 +424,7 @@ sub query_socket_debug {
   my $response = "";
   my $wantb = $nexp;
   for ( 0 ..  $nrtry) {
-    my $rv = sysread ( $sock, $response, $wantb , length ($response) ); # TODO will negative offset work?
+    my $rv = sysread ( $sock, $response, $wantb , length ($response) ); # tODO will negative offset work?
     # die "error in regular reading from socket : $!" unless (defined $rv) ;
 
     if ( $rv ) {
@@ -439,7 +440,7 @@ sub query_socket_debug {
 		    # we have already overrun and switch to garbage mode
 		    printf("overrun read %d bytes - read No %d : %s \n", $rv, $_,
 			    debug_str_hexdump($response) ) ;
-		    #  nevertheless continue reading to pre-clean line  TODO - really?
+		    #  nevertheless continue reading to pre-clean line  tODO - really?
 		    # return undef ;
 		    $wantb = 1024;
 		    next; 
