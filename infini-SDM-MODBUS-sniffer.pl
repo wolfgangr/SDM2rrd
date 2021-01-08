@@ -28,7 +28,7 @@ my $device = "~/infini/dev_infini_modbus";
 
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 
-my $debug = 1;
+my $debug = 0;
 
 # end of config ~~~~~~~~~~~~~~~~~~~~
 
@@ -72,6 +72,9 @@ my$buf;
 my $starttime; 
 my $cnt;
 
+my $req_cnt =0;     # index into our etra requests to round robin
+my $ans_cnt = -1 ;  # state to keep track where we are in the line
+
 # for my $cnt ( 1.. 100 ) {
 while (1) {
 	$cnt++;
@@ -84,15 +87,19 @@ while (1) {
 	my $m_sec = floor ( $u_secs / 1000 ) ;
 
 	if ($status) {
-		printf " s-ms-µs = %04d-%04d-%04d - data:  ", $sec_000, $m_sec, $us_000 ;
+		if ( $buf eq $startseq ) { $ans_cnt = 0; } else { $ans_cnt++ ;}
+
+		printf " s-ms-µs = %03d-%03d-%03d - ans_cnt: %d - data:  ", 
+			$sec_000, $m_sec, $us_000 , $ans_cnt;
+
 		print( debug_str_hexdump($buf) , "\n") ; 
+
+
 		next;
 	} else {
 		print " ## empty ## \n";
 		die "shitt happened: recieved empty string" ;
 	}
-
-
 }
 
 
