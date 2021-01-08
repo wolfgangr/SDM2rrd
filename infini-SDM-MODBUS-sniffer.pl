@@ -152,7 +152,7 @@ while (1) {
 			$data_hr = debug_str_hexdump ($qry );
 
 			printf(  "W:    at %s:           query: %s \n" ,  
-				my_timetag ( $wrtime , $starttime) , $data_hr; 
+				my_timetag ( $wrtime , $starttime) , $data_hr) ; 
 				# debug_str_hexdump ($qry )) ;
 
 			my $mq_msg = sprintf ("%s|%s|%014d|%s", 'Q', $req_cnt +1,  $starttime , $data_hr );
