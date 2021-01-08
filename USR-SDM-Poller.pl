@@ -20,7 +20,7 @@ my $bustag = 'tcp-241';
 # low level retries upon socket read errors - us wait times
 # at least 3 presumably to read off garbage after loss of sync
 # sum of all times elapse if timer is down
-our @RETRIES =  ( 10, 100, 1000, 10000 ) ; 
+# our @RETRIES =  ( 10, 100, 1000, 10000 ) ; 
 
 
 my $interval = 15 ; # seconds between runs
@@ -192,9 +192,9 @@ my $now = Time::HiRes::time();
 my $sleep = $nextrun - $now ;
 debug_printf (2, "\tcyclesleeper: lastrun=%.2f, nextrun=%.2f, now=%.2f, sleep=%.2f \n", 
 	$lastrun, $nextrun , $now , $sleep );
-
+if ( $sleep >= 1e-2 )  {   usleep ( $sleep * 1e6 ) ; }
 # this one accepts fractional seconds 
-# Time::HiRes::sleep( $sleep  ); 
+#  Time::HiRes::sleep( $sleep  ); 
 
 goto HEAD_OF_MAIN_LOOP ;
 
