@@ -22,10 +22,24 @@ use Time::HiRes qw( usleep gettimeofday );
 use Digest::CRC ;
 use POSIX qw (floor);
 
+use IPC::SysV qw(IPC_PRIVATE S_IRUSR S_IWUSR ftok IPC_CREAT IPC_NOWAIT );
+use IPC::Msg();
+use Cwd qw( realpath );
+
+
+# helper to extract the counter configuration
 my $precooker = "./infini-SDM-precook.pl";
+
+# persistent link into /dev/serial/by-path...
 my $device = "~/infini/dev_infini_modbus";
 # my stty .... better called outside?
 
+# Sysv-MQ need arbitrary file and a key to generate unique MQ key - share with client
+my $mq_ref = "./message_queue.kilroy" ;
+my $mq_mtype = 1;
+# my $our_ftok = ftok (realpath ($mq_ref)) ;
+
+# the request of infini-MODBUS-card - used as sync starter
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 
 my $debug = 0; 
@@ -51,7 +65,7 @@ if ($debug ) {
   foreach (@requests) { print debug_str_hexdump($_), "\n" ; }
 }
 
-# ----- setup line
+# ----- setup MODBUS line
 
 # let bash expand file globbing
 my $dnexp = `echo $device`;
@@ -65,7 +79,16 @@ if ($debug ) {
 	printf "device %s - resolved to %s - open\n\n", $device, $dnexp; 
 }
 
-#~~~~~~~~~~ start loop?
+# ------ setup message queue
+
+`touch $mq_ref` ; # make sure file exists
+my $our_ftok = ftok (realpath ($mq_ref)) ;
+
+my $MQ  = IPC::Msg->new($our_ftok     ,  S_IWUSR | S_IRUSR |  IPC_CREAT )
+	or die sprintf ( "cant create mq using token >0x%08x< ", $our_ftok  );
+
+
+#~~~~~~~~~~ prep header of main  loop
 my$buf;
 # my $cnt;
 # while ( $cnt ) {
