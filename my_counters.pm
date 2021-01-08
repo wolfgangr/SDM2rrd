@@ -39,6 +39,16 @@ $Counterlist{'mains'} = {
 	rrds => [ qw( totalP )],
 };
 
+
+$Counterlist{'mains_d'} = {
+        bus => 'MODBUS-hack',
+        ID =>  1,
+        Label => 'Hausanschluss Details',
+        # direction => 1,
+	# selectors => [ [ 'Ptot' ] ] ,
+	# rrds => [ qw( totalP )],
+};
+
 $Counterlist{'subs1'} = {
         bus => 'tcp-241',
         ID =>  1,
@@ -48,13 +58,13 @@ $Counterlist{'subs1'} = {
 $Counterlist{'subs2'} = {
         bus => 'tcp-241',
         ID =>  2,
-        Label => 'Wohnhaus alt',
+        Label => 'Stall + Werkstatt',
 };
 
 $Counterlist{'subs3'} = {
         bus => 'tcp-241',
         ID =>  3,
-        Label => 'Stall + Werkstatt',
+        Label => 'Wohnhaus alt',
 };
 
 $Counterlist{'subs4'} = {
@@ -66,7 +76,7 @@ $Counterlist{'subs4'} = {
 $Counterlist{'subs5'} = {
         bus => 'tcp-241',
         ID =>  5,
-        Label => 'Heizung',
+        Label => 'Keller + Heizung',
 };
 
 $Counterlist{'subs6'} = {

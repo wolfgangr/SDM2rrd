@@ -52,8 +52,9 @@ debug_printf (0, "%s started at %s", $0, `date`);
 # my $EOL = "\015\012";
 
 my $SOCK = IO::Socket::INET->new( Proto     => "tcp",
-				  Timeout   => 2 ,
-				  Blocking => 1 ,
+				  Timeout   => 20 ,
+				  # Blocking => 1 ,
+				  Blocking => 0 ,
 				  Type => IO::Socket::SOCK_STREAM,
                                   PeerAddr  => $remotehost,
                                   PeerPort  => $remoteport,
@@ -193,7 +194,7 @@ debug_printf (2, "\tcyclesleeper: lastrun=%.2f, nextrun=%.2f, now=%.2f, sleep=%.
 	$lastrun, $nextrun , $now , $sleep );
 
 # this one accepts fractional seconds 
-Time::HiRes::sleep( $sleep  ); 
+# Time::HiRes::sleep( $sleep  ); 
 
 goto HEAD_OF_MAIN_LOOP ;
 
@@ -318,22 +319,23 @@ sub SDM_parse_response {
 sub query_socket {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
   # print $sock $qry ; 
-  # syswrite $sock, $qry ;
-  $sock->send($qry);
+  syswrite $sock, $qry ;
+  # $sock->send($qry);
   my $response ;
-  usleep 1e4 ; 
+  usleep 1e6 ; 
   # usually one shot is OK, but when the line goes out of sync, retries may help
-  my $retry_count = 0;
+  # my $retry_count = 0;
+  sysread ( $sock, $response,  $nexp);
   # until (sysread ( $sock, $response,  $nexp) ) {
   # until ( my $rcv = $sock->recv($response, 1024) ) 
-  my $rcv = $sock->recv($response, 1024);
-  if(0) {
-    my $slp = $RETRIES[$retry_count];
-    printf (" %d %s %d %d  \n", $retry_count, $rcv , $#RETRIES, $slp );  	  
-    return undef if $retry_count > $#RETRIES;
-    Time::HiRes::usleep ( $RETRIES[$retry_count++] ) ;
-    $retry_count++ ;	
-  } 
+  # my $rcv = $sock->recv($response, 1024);
+  # if(0) {
+  #   my $slp = $RETRIES[$retry_count];
+  #   printf (" %d %s %d %d  \n", $retry_count, $rcv , $#RETRIES, $slp );  	  
+  #   return undef if $retry_count > $#RETRIES;
+  #   Time::HiRes::usleep ( $RETRIES[$retry_count++] ) ;
+  #   $retry_count++ ;	
+  # } 
   # if happens (shit) return undef;
   return $response;
 }
