@@ -312,34 +312,103 @@ sub SDM_parse_response {
   return ( @floats) ;
 }
 
-# perform physical socket queries
+
+# query_socket
+#
+# ~~~~~~~~~~~~~~~~ perform physical socket queries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # todo OK?:  errorr checking  with retry and timeouts
+#
 # returns answer string or undef upon failure
 # $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
+#
+
 sub query_socket {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
   # print $sock $qry ; 
+  
+  # hadr overwrite TODO defaults?
+  # 1 sec dumb wait runs nice for hours
+  # 0.1 sec runs OK for some minutes only
+  $nrtry = 20;
+  $w_us = 2e4;
+
+  # my $buf;
+
+  # pull off all garbage from the line
+  print "~~~~~~~~~~~~~~~~ enter query_socket for $nexp bytes ~~~~~~~~~~~~~ \n";
+  for ( 0 .. $nrtry ) {
+    my $buf;
+    my $rv = sysread ( $sock, $buf,  1024 );
+
+    # https://perldoc.perl.org/functions/sysread
+    # http://man.he.net/man2/read
+     
+    # TODO die "error in cleanup reading from socket : $!" unless (defined $rv) ;
+    
+    unless ( $rv ) {
+	    print "line clean at read No $_ \n";
+	    last;
+    } else {
+	    printf("pulled garbage from line - read No %d - buf: %s \n", $_, 
+	    	debug_str_hexdump($buf) ) ;
+    }
+    usleep ( $w_us );
+  }
+
   syswrite $sock, $qry ;
   # $sock->send($qry);
-  my $response ;
-  usleep 1e6 ; 
+  printf(' ------ completed $sock->send($qry) , $qry=%s' . "\n", debug_str_hexdump($qry) ) ;
+
+
+  usleep ($w_us * 1) ; # TODO increase after test to reasonable wait time
+  
+  
   # usually one shot is OK, but when the line goes out of sync, retries may help
-  # my $retry_count = 0;
-  sysread ( $sock, $response,  $nexp);
-  # until (sysread ( $sock, $response,  $nexp) ) {
-  # until ( my $rcv = $sock->recv($response, 1024) ) 
-  # my $rcv = $sock->recv($response, 1024);
-  # if(0) {
-  #   my $slp = $RETRIES[$retry_count];
-  #   printf (" %d %s %d %d  \n", $retry_count, $rcv , $#RETRIES, $slp );  	  
-  #   return undef if $retry_count > $#RETRIES;
-  #   Time::HiRes::usleep ( $RETRIES[$retry_count++] ) ;
-  #   $retry_count++ ;	
-  # } 
-  # if happens (shit) return undef;
-  return $response;
+
+  # my $rc = 0;
+  my $response = "";
+  my $wantb = $nexp;
+  for ( 0 ..  $nrtry) {
+    my $rv = sysread ( $sock, $response, $wantb , length ($response) ); # TODO will negative offset work?
+    # die "error in regular reading from socket : $!" unless (defined $rv) ;
+
+    if ( $rv ) {
+	    $wantb = $nexp - length ($response) ;
+	    unless ($wantb) {
+		    # exactly 0 bytes to expect - we have $nrtry bytes and hope the best
+		    printf("succesful read %d bytes - read No %d : %s \n", $nexp, $_,
+		    	debug_str_hexdump($response) ) ;
+		    print "~~ === ~~~~~~~~ regular query exit ~~~~~~~~~~ \n";
+		    return $response;
+
+	    } elsif ($wantb < 0)  {
+		    # we have already overrun and switch to garbage mode
+		    printf("overrun read %d bytes - read No %d : %s \n", $rv, $_,
+			    debug_str_hexdump($response) ) ;
+		    #  nevertheless continue reading to pre-clean line  TODO - really?
+		    # return undef ;
+		    $wantb = 1024;
+		    next; 
+	    }
+    # $wantb > 0 ; i.e. still bytes missing
+    printf("\t- partial read %d / %d bytes - read No %d : %s \n", 
+	    $rv, length ($response) ,  $_,
+	    debug_str_hexdump($response) ) ;
+    # printf( "\t--- acc resp has %d bytes:  %s\n",  length ($response) ,
+    # 	    debug_str_hexdump( $response) )  ;
+    }
+    # we may be here either after partial, overrun or empty read
+
+    # ~~~~~~~~~~~~~~~~~~~~~~
+    usleep ( $w_us );
+  }
+  # time out  while reading if we made it until here
+  printf("read timed out after %d loops of %d µs \n", $nrtry, $w_us ) ;
+
+  return undef ;  
 }
 
+# ~~~~~~~~~~~~~~~ end of line related stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # decodeIEE754
 sub decodeIEE754 {
@@ -362,7 +431,12 @@ sub debug_hexdump {
     }
 }
 
-
+# variant receing and returning string, no fork
+sub debug_str_hexdump {
+  my $str = shift ;
+  my @bytes = map (  sprintf ( "%02x", ord($_) ) , split ("", $str));
+  return join ( ':'  ,  @bytes );
+}
 
 # hexdump  of a string
 sub str_hexdump { 
