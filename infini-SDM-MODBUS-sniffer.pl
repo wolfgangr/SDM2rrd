@@ -28,9 +28,10 @@ my $device = "~/infini/dev_infini_modbus";
 
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 
+my $debug = 1;
+
 # end of config ~~~~~~~~~~~~~~~~~~~~
 
-print debug_str_hexdump($startseq), "\n" ;
 
 my @precooked = split ("\n",`$precooker`);
 my @pre_grepped = grep { ! /^#\s.*/ } @precooked ;
@@ -44,9 +45,11 @@ foreach my $l  (@pre_grepped) {
   push @requests, $rq;
 }
 
-print Dumper (\@precooked , \@pre_grepped  );
-
-foreach (@requests) { print debug_str_hexdump($_), "\n" ; }
+if ($debug ) {
+  printf "startseq: %s\nstructure of config reads;\n", debug_str_hexdump($startseq);
+  print Dumper (\@precooked , \@pre_grepped  );
+  foreach (@requests) { print debug_str_hexdump($_), "\n" ; }
+}
 
 # ----- setup line
 
@@ -58,8 +61,9 @@ chomp $dnexp;
 open ( my $MODBUS, '+<:raw', $dnexp ) 
 	or die "in $0: cannot open $device : $! ";
 
-printf "device %s - resolved to % - open\n\n", $device, $dnexp; 
-
+if ($debug ) {
+	printf "device %s - resolved to %s - open\n\n", $device, $dnexp; 
+}
 
 #~~~~~~~~~~ start loop?
 my$buf;
