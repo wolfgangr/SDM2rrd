@@ -1,6 +1,10 @@
+#/bin/bash
 # DEVICE="-F $1"
 # DEVICE="-F /dev/ttyChargery"
-DEVICE="-F ../dev_SDM_infini"
+DEVPATH=~/infini/dev_infini_modbus
+DEVICE="-F $DEVPATH"
+echo $DEVICE
+# exit
 stty $DEVICE -a
 echo "------ apply changes -----"
 sleep 1
