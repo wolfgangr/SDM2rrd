@@ -20,13 +20,13 @@ my $bustag = 'tcp-241';
 # low level retries upon socket read errors - us wait times
 # at least 3 presumably to read off garbage after loss of sync
 # sum of all times elapse if timer is down
-our @RETRIES = qw ( 10 100 1000 10000 ) ; 
+our @RETRIES =  ( 10, 100, 1000, 10000 ) ; 
 
 
 my $interval = 15 ; # seconds between runs
 my $interval_shift = 7 ; # seconds shift from even interval
 
-our $Debug = 1;
+our $Debug = 2;
 require ('./my_debugs.pl');
 
 # our $sdm_def_file;
@@ -252,7 +252,7 @@ sub SDM_parse_response {
   my ($response, $device_ID, $n_regs) = @_ ;   
 
   unless (defined $response) {
-	  debug_printf(3, "low level read timeout");
+	  debug_printf(2, "low level read timeout");
 	  return ();
   }
 
@@ -318,15 +318,21 @@ sub SDM_parse_response {
 sub query_socket {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
   # print $sock $qry ; 
-  syswrite $sock, $qry ;
+  # syswrite $sock, $qry ;
+  $sock->send($qry);
   my $response ;
   usleep 1e4 ; 
   # usually one shot is OK, but when the line goes out of sync, retries may help
   my $retry_count = 0;
-  until (sysread ( $sock, $response,  $nexp) ) {
+  # until (sysread ( $sock, $response,  $nexp) ) {
+  # until ( my $rcv = $sock->recv($response, 1024) ) 
+  my $rcv = $sock->recv($response, 1024);
+  if(0) {
+    my $slp = $RETRIES[$retry_count];
+    printf (" %d %s %d %d  \n", $retry_count, $rcv , $#RETRIES, $slp );  	  
     return undef if $retry_count > $#RETRIES;
-    usleep $RETRIES[$retry_count++] ;
-	
+    Time::HiRes::usleep ( $RETRIES[$retry_count++] ) ;
+    $retry_count++ ;	
   } 
   # if happens (shit) return undef;
   return $response;

@@ -32,9 +32,9 @@ date >> $LOGFILE
 ps ax | grep "./$PROCESS" | grep '/usr/bin/perl' >> $LOGFILE
 
 killall $PROCESS  >>  $LOGFILE 2>&1
-sleep 10 
+sleep 20 
 killall -9 $PROCESS  >> $LOGFILE 2>&1
-sleep 10
+sleep 20
 
 $PRESTARTER  >> $LOGFILE 2>&1
 $STARTER  >> $UPDLOG 2>&1   &
