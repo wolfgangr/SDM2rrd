@@ -37,8 +37,8 @@ killall -9 $PROCESS  >> $LOGFILE 2>&1
 sleep 
 
 $PRESTARTER  >> $LOGFILE 2>&1
-echo -n "---- restarted at " >> $UPDLOG
-date >> $UPDLOG 
+# echo -n "---- restarted at " >> $UPDLOG
+# date >> $UPDLOG 
 $STARTER 2>> $UPDLOG 1>> /dev/null   &
 
 echo -n "----- done -----  " >> $LOGFILE

@@ -26,7 +26,7 @@ my $bustag = 'tcp-241';
 my $interval = 15 ; # seconds between runs
 my $interval_shift = 7 ; # seconds shift from even interval
 
-our $Debug = 2;
+our $Debug = 1;
 require ('./my_debugs.pl');
 
 # our $sdm_def_file;
@@ -322,7 +322,61 @@ sub SDM_parse_response {
 # $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
 #
 
+
+# query_socket
+#
+# ~~~~~~~~~~~~~~~~ perform physical socket queries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# todo OK?:  errorr checking  with retry and timeouts
+#
+# returns answer string or undef upon failure
+# $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
+#
+
+# see debug version below, may switch by simple renaming 
 sub query_socket {
+  my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
+  #
+  # 20 x 20 ms = 0,4 s eff timeout, obviously works in 99 %
+  $nrtry = 20;
+  $w_us = 2e4;
+
+  # pull off all garbage from the line
+  for ( 0 .. $nrtry ) {
+    my $buf;
+    my $rv = sysread ( $sock, $buf,  1024 );
+    # no use in elaborated error handling here
+    
+    unless ( $rv ) {  last; }
+    usleep ( $w_us );
+  }
+
+  syswrite $sock, $qry ;
+  usleep ($w_us * 1) ; # ~ 50 % of requests answered quite fast
+  
+  # usually one shot is OK, but when the line goes out of sync, retries may help
+  my $response = "";
+  my $wantb = $nexp;
+  for ( 0 ..  $nrtry) {
+    my $rv = sysread ( $sock, $response, $wantb , length ($response) ); 
+    # die "error in regular reading from socket : $!" unless (defined $rv) ;
+
+    if ( $rv ) {
+	    $wantb = $nexp - length ($response) ;
+	    unless ($wantb) {
+		    return $response;
+
+	    } elsif ($wantb < 0)  {
+		    $wantb = 1024;
+		    next; 
+	    }
+    }
+    usleep ( $w_us );
+  }
+  # time out  while reading if we made it until here
+  return undef ;  
+}
+
+sub query_socket_debug {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
   # print $sock $qry ; 
   
