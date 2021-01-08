@@ -87,6 +87,8 @@ my $our_ftok = ftok (realpath ($mq_ref)) ;
 my $MQ  = IPC::Msg->new($our_ftok     ,  S_IWUSR | S_IRUSR |  IPC_CREAT )
 	or die sprintf ( "cant create mq using token >0x%08x< ", $our_ftok  );
 
+# can we increase the thingie to 10 MB?
+$MQ->set ( qbytes => 16000000  ); # 1e7 );
 
 #~~~~~~~~~~ prep header of main  loop
 my$buf;
@@ -140,6 +142,7 @@ while (1) {
 		if ( $mq_qa and defined $mq_rq) { 
 			my $mq_msg = sprintf ("%s|%s|%014d|%s", $mq_qa, $mq_rq, $starttime , $data_hr );
 			print $mq_msg , "\n";
+			$MQ->snd( $mq_mtype, $mq_msg);
 		}
 		
 		if ($ans_cnt == 1) {
@@ -159,6 +162,7 @@ while (1) {
 
 			my $mq_msg = sprintf ("%s|%s|%014d|%s", 'Q', $req_cnt +1,  $starttime , $data_hr );
 			print $mq_msg , "\n";
+			$MQ->snd( $mq_mtype, $mq_msg);
 
 			# if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
 			usleep ( 3e5 );
@@ -189,8 +193,6 @@ sub my_timetag {
   my ($now,  $start ) = @_ ;
   my $diff = (defined ( $start )) ?
 	( $now - $start )  : 0 ;  
-	#return sprintf ("03%d.%03d - %03d.%03d",
-	#  split_000($now/1000, 2), split_000($diff/1000, 2) ) ;
   return my_000_000 ($now) . ' - ' .  my_000_000 ($diff);
 }
 
@@ -204,21 +206,6 @@ sub my_000_000 {
 	substr($bnstr, -3,3)  ;
  
 }	
-# split positve big number into seq of 1000
-#  ($megas, $kilos, $ones) split_000 ($bignumber, 3)
-sub split_000 {
-  my ($bn, $chunks) = @_;
-  my @res;
-
-  while ($chunks--) {
-    unshift @res, int($bn % 1000) ;
-    my $bn = int ( $bn / 1000 ) ;
-  }
-  unshift @res,$bn ;
-  return ( @res );
-   
-}
-
 
 
 # take some binary string and return printable hexdump
