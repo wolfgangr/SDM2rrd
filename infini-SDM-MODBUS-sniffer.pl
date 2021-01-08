@@ -142,14 +142,21 @@ while (1) {
 		
 		if ($ans_cnt == 1) {
 			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
-			# we have a SDM response, and insert our multimaster query
+			# we have a SDM response, and will insert our multimaster query now
+
 			usleep ( 1e5 );
 			my $qry = $requests[$req_cnt ];
 			syswrite $MODBUS, $qry ;
-			my$wrtime = gettimeofday * 1000 ;
+
+			my $wrtime = gettimeofday * 1000 ;
+			$data_hr = debug_str_hexdump ($qry );
+
 			printf(  "W:    at %s:           query: %s \n" ,  
-				my_timetag ( $wrtime , $starttime) , 
-				debug_str_hexdump ($qry )) ;
+				my_timetag ( $wrtime , $starttime) , $data_hr; 
+				# debug_str_hexdump ($qry )) ;
+
+			my $mq_msg = sprintf ("%s|%s|%014d|%s", 'Q', $req_cnt +1,  $starttime , $data_hr );
+			print $mq_msg , "\n";
 
 			# if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
 			usleep ( 3e5 );
