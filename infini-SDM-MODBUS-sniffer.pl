@@ -94,6 +94,14 @@ while (1) {
 
 		print( debug_str_hexdump($buf) , "\n") ; 
 
+		if ($ans_cnt == 1) {
+			# we have a SDM response, and insert our multimaster query
+			usleep ( 2e5 );
+			syswrite $MODBUS, $requests[$req_cnt ] ;
+			printf "inserted %s \n", debug_str_hexdump( $requests[$req_cnt ]) ;
+			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
+			usleep ( 2e5 );
+		}
 
 		next;
 	} else {
