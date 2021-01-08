@@ -95,7 +95,7 @@ my$buf;
 my $starttime = gettimeofday * 1e3 ; 
 my $cnt;
 
-my $req_cnt =0;     # index into our etra requests to round robin
+my $req_cnt = -1 ;     # index into our etra requests to round robin
 my $ans_cnt = -1 ;  # state to keep track where we are in the line
 
 # for my $cnt ( 1.. 100 ) {
@@ -108,16 +108,40 @@ while (1) {
 	
 
 	if ($status) {
+
+		my ($mq_qa, $mq_rq, $data_hr);
 		if ( $buf eq $startseq ) { 
 			$ans_cnt = 0; 
 			$starttime = $rectime  ;
+			$mq_qa = 'Q';
+			$mq_rq = 0;
 		} else { $ans_cnt++ ;}
 
-
+		$data_hr = debug_str_hexdump($buf);
 		printf( " - ans: %d - data: %s \n",  
-			$ans_cnt, debug_str_hexdump($buf) ) ; 
+			$ans_cnt, $data_hr ) ; 
 
 		if ($ans_cnt == 1) {
+			$mq_qa = 'R';
+			$mq_rq = 0;
+		}
+
+		if ($ans_cnt == 2) {
+			$mq_qa = 'R';
+			$mq_rq = $req_cnt +1;
+		}
+
+		# message queue format:
+		# rq-set (0 for ininis total power, 1..3 for imported selections
+		# Q|A for query/answer (bus master view to SDM counter)
+		# time of seq-starter-query (epoc in ms, 1+10+3 digits)
+		# data as human readable hexdump in 11:4a:5f.... format
+		# | as separator
+		my $mq_msg = sprintf ("%s|%s|%014d|%s", $mq_qa, $mq_rq, $starttime , $data_hr );
+		print $mq_msg , "\n";
+		
+		if ($ans_cnt == 1) {
+			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
 			# we have a SDM response, and insert our multimaster query
 			usleep ( 1e5 );
 			my $qry = $requests[$req_cnt ];
@@ -127,7 +151,7 @@ while (1) {
 				my_timetag ( $wrtime , $starttime) , 
 				debug_str_hexdump ($qry )) ;
 
-			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
+			# if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
 			usleep ( 3e5 );
 		}
 
