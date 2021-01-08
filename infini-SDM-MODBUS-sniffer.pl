@@ -28,7 +28,7 @@ my $device = "~/infini/dev_infini_modbus";
 
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 
-my $debug = 0;
+my $debug = 0; 
 
 # end of config ~~~~~~~~~~~~~~~~~~~~
 
@@ -69,7 +69,7 @@ if ($debug ) {
 my$buf;
 # my $cnt;
 # while ( $cnt ) {
-my $starttime; 
+my $starttime = gettimeofday * 1e3 ; 
 my $cnt;
 
 my $req_cnt =0;     # index into our etra requests to round robin
@@ -78,29 +78,34 @@ my $ans_cnt = -1 ;  # state to keep track where we are in the line
 # for my $cnt ( 1.. 100 ) {
 while (1) {
 	$cnt++;
-	printf  "-%02d = " , $cnt, ;
+	# printf  "-%02d = " , $cnt, ;
 	my $status = sysread $MODBUS, $buf, 1024 ;
-	my ($secs, $u_secs) = gettimeofday;
-
-	my $sec_000 = $secs % 1000;
-	my $us_000 = $u_secs % 1000;
-	my $m_sec = floor ( $u_secs / 1000 ) ;
+	my $rectime = gettimeofday * 1000 ;
+	printf  "R: %02d at %s:" , $cnt,  my_timetag ( $rectime, $starttime) ;
+	
 
 	if ($status) {
-		if ( $buf eq $startseq ) { $ans_cnt = 0; } else { $ans_cnt++ ;}
+		if ( $buf eq $startseq ) { 
+			$ans_cnt = 0; 
+			$starttime = $rectime  ;
+		} else { $ans_cnt++ ;}
 
-		printf " s-ms-µs = %03d-%03d-%03d - ans_cnt: %d - data:  ", 
-			$sec_000, $m_sec, $us_000 , $ans_cnt;
 
-		print( debug_str_hexdump($buf) , "\n") ; 
+		printf( " - ans: %d - data: %s \n",  
+			$ans_cnt, debug_str_hexdump($buf) ) ; 
 
 		if ($ans_cnt == 1) {
 			# we have a SDM response, and insert our multimaster query
-			usleep ( 2e5 );
-			syswrite $MODBUS, $requests[$req_cnt ] ;
-			printf "inserted %s \n", debug_str_hexdump( $requests[$req_cnt ]) ;
+			usleep ( 1e5 );
+			my $qry = $requests[$req_cnt ];
+			syswrite $MODBUS, $qry ;
+			my$wrtime = gettimeofday * 1000 ;
+			printf(  "W:    at %s:           query: %s \n" ,  
+				my_timetag ( $wrtime , $starttime) , 
+				debug_str_hexdump ($qry )) ;
+
 			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
-			usleep ( 2e5 );
+			usleep ( 3e5 );
 		}
 
 		next;
@@ -118,6 +123,45 @@ while (1) {
 exit ;
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
+# $timetagstring timetag($now, [ $start ])
+# returns printable time and time offset tags
+# if start ist omitted, offset is 0
+# time is  in µſ, only ms are printed
+sub my_timetag {
+  my ($now,  $start ) = @_ ;
+  my $diff = (defined ( $start )) ?
+	( $now - $start )  : 0 ;  
+	#return sprintf ("03%d.%03d - %03d.%03d",
+	#  split_000($now/1000, 2), split_000($diff/1000, 2) ) ;
+  return my_000_000 ($now) . ' - ' .  my_000_000 ($diff);
+}
+
+# returns 3-grops of 1e9, 1e6, 1e3, discards upper and lower digits
+sub my_000_000 {
+  my $bn = shift;
+  my $bnstr = sprintf "%06d", $bn;
+  return 
+  	#substr($bnstr -12,3) . '.' .
+	substr($bnstr, -6,3) . '.' .
+	substr($bnstr, -3,3)  ;
+ 
+}	
+# split positve big number into seq of 1000
+#  ($megas, $kilos, $ones) split_000 ($bignumber, 3)
+sub split_000 {
+  my ($bn, $chunks) = @_;
+  my @res;
+
+  while ($chunks--) {
+    unshift @res, int($bn % 1000) ;
+    my $bn = int ( $bn / 1000 ) ;
+  }
+  unshift @res,$bn ;
+  return ( @res );
+   
+}
 
 
 
