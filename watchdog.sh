@@ -32,12 +32,14 @@ date >> $LOGFILE
 ps ax | grep "./$PROCESS" | grep '/usr/bin/perl' >> $LOGFILE
 
 killall $PROCESS  >>  $LOGFILE 2>&1
-sleep 20 
+sleep 5 
 killall -9 $PROCESS  >> $LOGFILE 2>&1
-sleep 20
+sleep 
 
 $PRESTARTER  >> $LOGFILE 2>&1
-$STARTER  >> $UPDLOG 2>&1   &
+echo -n "---- restarted at " >> $UPDLOG
+date >> $UPDLOG 
+$STARTER 2>> $UPDLOG 1>> /dev/null   &
 
 echo -n "----- done -----  " >> $LOGFILE
 date >> $LOGFILE
