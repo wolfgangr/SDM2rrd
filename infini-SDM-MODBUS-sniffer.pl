@@ -137,8 +137,10 @@ while (1) {
 		# time of seq-starter-query (epoc in ms, 1+10+3 digits)
 		# data as human readable hexdump in 11:4a:5f.... format
 		# | as separator
-		my $mq_msg = sprintf ("%s|%s|%014d|%s", $mq_qa, $mq_rq, $starttime , $data_hr );
-		print $mq_msg , "\n";
+		if ( $mq_qa and defined $mq_rq) { 
+			my $mq_msg = sprintf ("%s|%s|%014d|%s", $mq_qa, $mq_rq, $starttime , $data_hr );
+			print $mq_msg , "\n";
+		}
 		
 		if ($ans_cnt == 1) {
 			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
