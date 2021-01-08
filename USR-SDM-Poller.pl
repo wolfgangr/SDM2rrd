@@ -52,10 +52,15 @@ debug_printf (0, "%s started at %s", $0, `date`);
 # my $EOL = "\015\012";
 
 my $SOCK = IO::Socket::INET->new( Proto     => "tcp",
+				  Timeout   => 2 ,
+				  Blocking => 1 ,
+				  Type => IO::Socket::SOCK_STREAM,
                                   PeerAddr  => $remotehost,
                                   PeerPort  => $remoteport,
            )     || die "cannot connect to port $remoteport on $remotehost";
 $SOCK->autoflush(1);
+
+binmode $SOCK;
 
 debug_print (3, "-- connected ---\n") ;
 
@@ -72,7 +77,7 @@ my $lastrun = Time::HiRes::time();
 my $modulo = (int ($lastrun) + $interval_shift) % $interval;
 my $nextrun = $lastrun - $modulo + $interval;
 
-debug_printf (3, "cycletimer: lastrun=%.2f, nextrun=%.2f, diff=%.2f \n", 
+debug_printf (2, "cycletimer: lastrun=%.2f, nextrun=%.2f, diff=%.2f \n", 
 	$lastrun, $nextrun , $nextrun - $lastrun);
 
 
@@ -184,7 +189,7 @@ COUNTER: foreach my $counter_tag (@counter_subset) {
 
 my $now = Time::HiRes::time();
 my $sleep = $nextrun - $now ;
-debug_printf (3, "\tcyclesleeper: lastrun=%.2f, nextrun=%.2f, now=%.2f, sleep=%.2f \n", 
+debug_printf (2, "\tcyclesleeper: lastrun=%.2f, nextrun=%.2f, now=%.2f, sleep=%.2f \n", 
 	$lastrun, $nextrun , $now , $sleep );
 
 # this one accepts fractional seconds 
@@ -302,7 +307,7 @@ sub SDM_parse_response {
 
   # printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
   #     $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
-  # TODO don't die - if happens (shit) return undef;
+  # todo OK: don't die - if happens (shit) return undef;
   return ( @floats) ;
 }
 
@@ -312,9 +317,10 @@ sub SDM_parse_response {
 # $response = query_socket ( $sock, $querystring, $expected_bytes , [ $retries , [ $wait_us ]] )
 sub query_socket {
   my ($sock, $qry, $nexp, $nrtry, $w_us) = @_ ; 
-  print $sock $qry ; 
+  # print $sock $qry ; 
+  syswrite $sock, $qry ;
   my $response ;
-  
+  usleep 1e4 ; 
   # usually one shot is OK, but when the line goes out of sync, retries may help
   my $retry_count = 0;
   until (sysread ( $sock, $response,  $nexp) ) {
