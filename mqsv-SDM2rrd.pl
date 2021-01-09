@@ -214,6 +214,9 @@ while (1) {
 		  my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
 		  print "fields of $rrd_tag:" , join (',', @fields ) , "\n"; 
 	  }
+	# get the values to the tags
+	my $foo =  sdm_evaluate ( \%wayback, \%cache );
+ 
 
   
 
@@ -231,6 +234,15 @@ while (1) {
 exit 1;
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# hang on, what's going on here???
+#  sdm_evaluate ( \%wayback, \%cache )  
+sub sdm_evaluate  {
+  my ($wb, $ch) = @_ ;
+  print Data::Dumper->Dump ( [ $wb, $ch] , [ qw(  *wb *ch ) ] );
+  die "debug in -------------- sub sdm_evaluate -----------";
+}
+
 
 # take some binary string and return printable hexdump
 sub debug_str_hexdump {
