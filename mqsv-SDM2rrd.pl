@@ -28,7 +28,7 @@ use RRDs();
 my $precooker = "./infini-SDM-precook.pl";
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 
-our $Debug = 5; 
+our $Debug = 0; 
 
 my @counter_tags = qw ( mains mains_d  );
 
@@ -55,8 +55,9 @@ our %RRD_definitions ;
 our ($RRD_dir , $RRD_prefix, $RRD_sprintf ); # = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
 require ('./rrd_def.pm');
 
+# die "######### DEBUG ########";
 
-if ($Debug >=5) {
+if ($Debug >=999) {
   debug_print ( 3,  Data::Dumper->Dump (
 	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
 	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  )
@@ -80,7 +81,7 @@ foreach my $l  (@pre_grepped) {
   push @requests, $rq;
 }
 
-if ($Debug >=5) {
+if ($Debug >=999) {
   printf "startseq: %s\nstructure of config reads;\n", debug_str_hexdump($startseq);
   print Dumper (\@precooked , \@pre_grepped  );
   foreach (@requests) { print debug_str_hexdump($_), "\n" ; }
@@ -88,10 +89,10 @@ if ($Debug >=5) {
 
 #----------------------
 # build a hash structure to store(?)/index our data received
-# $input_cache{ 'query-tag' }->{ 'time' }->values[]
+# $wayback{ 'query-tag' }->{ 'time' }->values[]
 #                           +-some-indices-let's see.... 
 #
-#  %input_cache = (
+#  %wayback = (
 #       '_0034:0002' => {
 #           'qry_tag'   => '_0034:0002',
 #           'reg_start' => 52, 'reg_num'   => 2,
@@ -102,18 +103,18 @@ if ($Debug >=5) {
 
 
 
-my %input_cache ;
+my %wayback ;
 
 foreach my $rq (@requests) {
 	# my @byte_str = split ';' , $rq;
 	# print Dumper (\@byte_str); 
 	my ($ID, $x_04, $reg_start, $reg_num, $crc) = unpack ( 'CCnnn' , $rq); 
 	
-	my $qry_tag = sprintf ("_%04x:%04x", $reg_start, $reg_num);
+	# my $qry_tag = sprintf ("_%04x:%04x", $reg_start, $reg_num);
 	my $param_min = $reg_start/2 +1;
 	my $param_max = $param_min -1 + $reg_num/2;
 	
-	# my $qry_tag =  debug_str_hexdump($rq);
+	my $qry_tag =  debug_str_hexdump($rq);
 	print debug_str_hexdump($rq), "\n" ;
 	printf("ID=0x%02x cmd=0x%02x r-start=0x%04x n-reg=0x%04x crc=0x%04x - query-tag= '%s'", 
 		$ID, $x_04, $reg_start, $reg_num, $crc, $qry_tag );
@@ -126,14 +127,16 @@ foreach my $rq (@requests) {
 
 	my %rqdef = (reg_start=> $reg_start,  reg_num=>  $reg_num,  qry_tag=> $qry_tag ,
 		val_tags => \@val_tags , param_min => $param_min,  param_max => $param_max);
-	$input_cache{ $qry_tag } = \%rqdef;
+	$wayback{ $qry_tag } = \%rqdef;
 }
 
-print Data::Dumper->Dump ( [ \%input_cache ] , [ qw( *input_cache) ]  );
+
+$Debug=5;
+print Data::Dumper->Dump ( [ \%wayback ] , [ qw( *wayback) ]  );
 
 print "===================================== setup done =========================== \n";
 
-# die "######### DEBUG ########";
+die "######### DEBUG ########";
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # open message queue ~~~~~~~~~~~~~~~
 
@@ -148,19 +151,32 @@ my $MQ  = IPC::Msg->new($our_ftok     ,    S_IRUSR | S_IWUSR |  IPC_CREAT   )
 print " --- message queue open --- \n";
 
 my $cnt =1;
+my %cache=();
 while (1) {
 
   my $buf;
   # $mq_my->rcv($buf, 1024, 1 , IPC_NOWAIT  );
 
   $MQ->rcv($buf, 1024, $mq_mtype);
-  print $buf , "\n" if $buf  ;
+  # print $buf , "\n" if $buf  ;
 
   my ($mq_qa, $mq_rq, $starttime , $data_hr) = split ( '\|'  , $buf);
-  my @datary =  split ('\:', $data_hr);
+  my @datary =  map (hex,  split ('\:', $data_hr) );
+ 
   printf ("type=%s, no=%d, time=%014d, data (len=%d): %s  \n", $mq_qa, $mq_rq, $starttime , scalar @datary ,  $data_hr  );
+  # print "back-test  ",  , "\n"; 
+  # print Data::Dumper->Dump ( [ \@datary ] , [ qw( *datary) ]  );
 
+  $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq)  } = { last => $starttime, };
+  if ($mq_qa eq 'Q')  {
+	  $cache{ sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime ) } = { tag => $data_hr };
+  } elsif ($mq_qa eq 'R')   {
+  	$cache{ sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime ) } = { data => \@datary };
+  } else {
+	die " illegal data type token - hang on, how did I come here??? ";
+  }
 
+  print Data::Dumper->Dump ( [ \%cache ] , [  qw ( *cache) ] );
   # sleep ;
   $cnt++;
 
