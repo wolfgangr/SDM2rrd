@@ -245,7 +245,23 @@ sub sdm_evaluate  {
   # ch{ ....
   # - 'Q:0' => {'tag' => '01:04:00:34:00:02:30:05'   }
   # - 'R:0' => { 'last' => '01610229676604'  },
-  #   'R:0:01610229675545' => { 'data' => [ 1, 4, 4, 69, 52, 203, 112, 249, 146  ] },
+  #   'R:0:016i10229675545' => { 'data' => [ 1, 4, 4, 69, 52, 203, 112, 249, 146  ] },
+  #
+  #   ^([R|Q])\:(\d):(\d{14})$
+  #
+
+  
+  for my $rtag ( sort grep { /^([R|Q])\:(\d):(\d{14})$/ } keys %{$ch} ) {
+	  $rtag =~ /^([R|Q])\:(\d):(\d{14})$/ ;
+	  printf  ("all=%s, qr=%s, no=%d , t=%s \n",   $rtag,  $1, $2, $3 ) ;
+
+  }
+  
+  die "debug in -------------- sub sdm_evaluate -----------";
+
+
+
+  my %kv = ();
   for my $wbtag ( keys %{$wb} )  { 
 	print $wbtag, "\n" ;
 	my @valtags = @{$wb->{ $wbtag }->{ 'val_tags' } } ;
