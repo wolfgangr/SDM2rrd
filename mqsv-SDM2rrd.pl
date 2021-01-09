@@ -194,7 +194,7 @@ while (1) {
   # push perl at its PERLies ;-}
   # loop over indexes of requests (but the first aka [0]) , count the hits of R and Q labels, 
   # 	and if there are >= 6 we might have a complete data set
-  if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (0 .. $#requests) ) )  >= $#requests ) {
+  if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (0 .. $#requests) ) ) >= scalar  @requests ) {
 	  # die " we hit a all other counter case";
 	  # TODO what ist to be done
 	  # $counter_tags[0] might tell us what exactly
@@ -251,9 +251,11 @@ sub sdm_evaluate  {
   #
 
   
-  for my $rtag ( sort grep { /^([R|Q])\:(\d):(\d{14})$/ } keys %{$ch} ) {
-	  $rtag =~ /^([R|Q])\:(\d):(\d{14})$/ ;
-	  printf  ("all=%s, qr=%s, no=%d , t=%s \n",   $rtag,  $1, $2, $3 ) ;
+  # for my $rtag ( sort grep { /^([R|Q])\:(\d):(\d{14})$/ } keys %{$ch} ) {
+  #	  $rtag =~ /^([R|Q])\:(\d):(\d{14})$/ ;
+  for my $rtag ( sort grep { /^R\:(\d)$/ } keys %{$ch} ) {
+	  $rtag =~ /^R\:(\d)$/ ;
+	  printf  ("all=%s,  no=%d  \n",   $rtag,  $1  ) ;
 
   }
   
