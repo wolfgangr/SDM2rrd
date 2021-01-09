@@ -240,6 +240,25 @@ exit 1;
 sub sdm_evaluate  {
   my ($wb, $ch) = @_ ;
   print Data::Dumper->Dump ( [ $wb, $ch] , [ qw(  *wb *ch ) ] );
+  # so we see
+  # - wb{ '01:04:00:ea:00:12:51:f3' }  -> { 'val_tags' } => [ .... 'U1', 'U2', ....
+  # ch{ ....
+  # - 'Q:0' => {'tag' => '01:04:00:34:00:02:30:05'   }
+  # - 'R:0' => { 'last' => '01610229676604'  },
+  #   'R:0:01610229675545' => { 'data' => [ 1, 4, 4, 69, 52, 203, 112, 249, 146  ] },
+  for my $wbtag ( keys %{$wb} )  { 
+	print $wbtag, "\n" ;
+	my @valtags = @{$wb->{ $wbtag }->{ 'val_tags' } } ;
+	print join( ',', @valtags), "\n", ;
+
+  }
+
+
+  # what do we like as return? hash tag-> value?
+
+
+  #
+  #
   die "debug in -------------- sub sdm_evaluate -----------";
 }
 
