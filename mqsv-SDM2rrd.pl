@@ -185,7 +185,8 @@ while (1) {
   # if R:1 & R:2 & R:3 ... & ... data ... processs... otherstuff..... cleanup
   # if we have more than whatever (20 ?) records in %cache we may die
   if ( $cache{ 'R:0' } and $cache{ 'Q:0' } ) {
-	print " we hit a ptot case\n";
+	  # we have all we need - ptot, times , definitions
+	   print " we hit a ptot case\n";
 	# TODO what ist to be done
   } 
 
@@ -196,6 +197,23 @@ while (1) {
   if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (1 .. $#requests) ) )  >= 3 ) {
 	  # die " we hit a all other counter case";
 	  # TODO what ist to be done
+	  # $counter_tags[0] might tell us what exactly
+	  # we want to do a rrdupdate, so we need
+	  # - the correct rrd name
+	  # - the value list
+	  # - the values
+	  #
+	  # try: 
+	  # - merge known values
+	  # - %Counterlist->{ rrds }[0] --- -> rrd database name
+	  # - %RRD_definitions
+	  my $counter = $counter_tags[1];
+	  my @rrds = @{$Counterlist{ $counter }->{ rrds }} ;
+	  print "counter: $counter, rrds: ", join (',', @rrds) , "\n";
+
+  
+
+	  die " ~~~~~~~~~~~~~~~ we hit a all other counter case ~~~~~~~~~~~~~~~~~~~~~~+" ;
 
   }
 
