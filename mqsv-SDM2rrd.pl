@@ -194,10 +194,16 @@ while (1) {
   # loop over indexes of requests (but the first aka [0]) , count the hits of R and Q labels, 
   # 	and if there are >= 6 we might have a complete data set
   if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (1 .. $#requests) ) )  >= 3 ) {
-	  die " we hit a all other counter case";
+	  # die " we hit a all other counter case";
+	  # TODO what ist to be done
 
   }
 
+  if (scalar keys %cache >20 ) {
+	die "looks like our cache is clobbered with BS stuff .... ";
+	# TODO what ist to be done
+
+  }
 }
 
 exit 1;
