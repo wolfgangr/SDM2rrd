@@ -43,7 +43,7 @@ my $mq_mtype = 1;
 require ('./my_debugs.pl');
 
 our $sdm_def_file;
-our (@SDM_regs , %SDM_reg_by_tag , %SDM_selectors);
+our (@SDM_regs , %SDM_reg_by_tag , %SDM_selectors, %SDM_tags_by_parno);
 require ('./extract-SDM-def.pm');
 
 our $MAX_nvals;
@@ -56,7 +56,7 @@ our ($RRD_dir , $RRD_prefix, $RRD_sprintf ); # = "%s/%s_%s_%s.rrd"; # $dir, $pre
 require ('./rrd_def.pm');
 
 
-if ($Debug >=3) {
+if ($Debug >=5) {
   debug_print ( 3,  Data::Dumper->Dump (
 	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
 	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  )
@@ -80,24 +80,72 @@ foreach my $l  (@pre_grepped) {
   push @requests, $rq;
 }
 
-if ($Debug >=3) {
+if ($Debug >=5) {
   printf "startseq: %s\nstructure of config reads;\n", debug_str_hexdump($startseq);
   print Dumper (\@precooked , \@pre_grepped  );
   foreach (@requests) { print debug_str_hexdump($_), "\n" ; }
 }
 
+#----------------------
+# build a hash structure to store(?)/index our data received
+# $input_cache{ 'query-tag' }->{ 'time' }->values[]
+#                           +-some-indices-let's see.... 
+#
+#  %input_cache = (
+#       '_0034:0002' => {
+#           'qry_tag'   => '_0034:0002',
+#           'reg_start' => 52, 'reg_num'   => 2,
+#           'param_min' => 27, 'param_max' => 27,
+#           'val_tags'  => [ 'Ptot'  ],
+#                       },  
+#       '_0156:0016' => { .....
 
-die "######### DEBUG ########";
+
+
+my %input_cache ;
+
+foreach my $rq (@requests) {
+	# my @byte_str = split ';' , $rq;
+	# print Dumper (\@byte_str); 
+	my ($ID, $x_04, $reg_start, $reg_num, $crc) = unpack ( 'CCnnn' , $rq); 
+	
+	my $qry_tag = sprintf ("_%04x:%04x", $reg_start, $reg_num);
+	my $param_min = $reg_start/2 +1;
+	my $param_max = $param_min -1 + $reg_num/2;
+	
+	# my $qry_tag =  debug_str_hexdump($rq);
+	print debug_str_hexdump($rq), "\n" ;
+	printf("ID=0x%02x cmd=0x%02x r-start=0x%04x n-reg=0x%04x crc=0x%04x - query-tag= '%s'", 
+		$ID, $x_04, $reg_start, $reg_num, $crc, $qry_tag );
+	printf(" params min=%d max=%d\n", $param_min , $param_max );
+
+	my @val_tags =();
+	for ($param_min .. $param_max) {
+		$val_tags[$_ - $param_min ] =$SDM_tags_by_parno{ $_ } || '';
+	}	
+
+	my %rqdef = (reg_start=> $reg_start,  reg_num=>  $reg_num,  qry_tag=> $qry_tag ,
+		val_tags => \@val_tags , param_min => $param_min,  param_max => $param_max);
+	$input_cache{ $qry_tag } = \%rqdef;
+}
+
+print Data::Dumper->Dump ( [ \%input_cache ] , [ qw( *input_cache) ]  );
+
+print "===================================== setup done =========================== \n";
+
+# die "######### DEBUG ########";
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # open message queue ~~~~~~~~~~~~~~~
 
-`touch $mq_ref` ; # make sure file exists
+# `touch $mq_ref` ; # make sure file exists
 my $our_ftok = ftok (realpath ($mq_ref)) ;
 
-my $MQ  = IPC::Msg->new($our_ftok     ,   S_IWUSR | S_IRUSR |  IPC_CREAT )
+# my $MQ  = IPC::Msg->new($our_ftok     ,   S_IWUSR | S_IRUSR |  IPC_CREAT )
+
+my $MQ  = IPC::Msg->new($our_ftok     ,    S_IRUSR | S_IWUSR |  IPC_CREAT   )
 	or die sprintf ( "cant create mq using token >0x%08x< ", $our_ftok  );
 
-
+print " --- message queue open --- \n";
 
 my $cnt =1;
 while (1) {
