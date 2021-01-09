@@ -136,7 +136,7 @@ print Data::Dumper->Dump ( [ \%wayback ] , [ qw( *wayback) ]  );
 
 print "===================================== setup done =========================== \n";
 
-die "######### DEBUG ########";
+# die "######### DEBUG ########";
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # open message queue ~~~~~~~~~~~~~~~
 
@@ -169,7 +169,7 @@ while (1) {
 
   $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq)  } = { last => $starttime, };
   if ($mq_qa eq 'Q')  {
-	  $cache{ sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime ) } = { tag => $data_hr };
+	  $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq  ) } = { tag => $data_hr };
   } elsif ($mq_qa eq 'R')   {
   	$cache{ sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime ) } = { data => \@datary };
   } else {
