@@ -194,7 +194,7 @@ while (1) {
   # push perl at its PERLies ;-}
   # loop over indexes of requests (but the first aka [0]) , count the hits of R and Q labels, 
   # 	and if there are >= 6 we might have a complete data set
-  if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (1 .. $#requests) ) )  >= 3 ) {
+  if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (0 .. $#requests) ) )  >= $#requests ) {
 	  # die " we hit a all other counter case";
 	  # TODO what ist to be done
 	  # $counter_tags[0] might tell us what exactly
@@ -210,6 +210,10 @@ while (1) {
 	  my $counter = $counter_tags[1];
 	  my @rrds = @{$Counterlist{ $counter }->{ rrds }} ;
 	  print "counter: $counter, rrds: ", join (',', @rrds) , "\n";
+	  for my $rrd_tag (@rrds) {
+		  my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
+		  print "fields of $rrd_tag:" , join (',', @fields ) , "\n"; 
+	  }
 
   
 
