@@ -156,6 +156,11 @@ while (1) {
   $MQ->rcv($buf, 1024, $mq_mtype);
   print $buf , "\n" if $buf  ;
 
+  my ($mq_qa, $mq_rq, $starttime , $data_hr) = split ( '\|'  , $buf);
+  my @datary =  split ('\:', $data_hr);
+  printf ("type=%s, no=%d, time=%014d, data (len=%d): %s  \n", $mq_qa, $mq_rq, $starttime , scalar @datary ,  $data_hr  );
+
+
   # sleep ;
   $cnt++;
 
