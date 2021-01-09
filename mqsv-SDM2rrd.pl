@@ -180,6 +180,23 @@ while (1) {
   # sleep ;
   $cnt++;
 
+  # what can we do?
+  # if 'R:0'->last ....  and 'Q:0'->tag=> ... process R:0:{time} -> data .... cleanup
+  # if R:1 & R:2 & R:3 ... & ... data ... processs... otherstuff..... cleanup
+  # if we have more than whatever (20 ?) records in %cache we may die
+  if ( $cache{ 'R:0' } and $cache{ 'Q:0' } ) {
+	print " we hit a ptot case\n";
+	# TODO what ist to be done
+  } 
+
+  # this is a bit crude, assumes we have on ptot in $requests[0] and sth like 1..3 in the rest
+  # push perl at its PERLies ;-}
+  # loop over indexes of requests (but the first aka [0]) , count the hits of R and Q labels, 
+  # 	and if there are >= 6 we might have a complete data set
+  if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (1 .. $#requests) ) )  >= 3 ) {
+	  die " we hit a all other counter case";
+
+  }
 
 }
 
