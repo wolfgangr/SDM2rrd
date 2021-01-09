@@ -3,10 +3,10 @@
 # companion to infini-SDM-MODBUS-sniffer.pl
 # reads the counter values from message queue and stores them into approriate rrds
 # 
-# boilerplating:
-# - this started as a copy of mqsv-test-client.pl
-# - will then take the counter related config from infini-SDM-MODBUS-sniffer.pl
-# - maybe some extra config from ....
+# boilerplating: 
+# OK - this started as a copy of mqsv-test-client.pl
+# OK - will then take the counter related config from infini-SDM-MODBUS-sniffer.pl
+# OK - and load in all the counter config from infini-SDM-precook.pl
 # - and resemble the data conversion towards rrd from USR-SDM-Poller.pl
 #
 use strict;
@@ -22,6 +22,7 @@ use IPC::SysV qw(IPC_PRIVATE S_IRUSR S_IWUSR ftok IPC_CREAT IPC_NOWAIT );
 use IPC::Msg();
 use Cwd qw( realpath );
 
+use RRDs();
 
 # helper to extract the counter configuration
 my $precooker = "./infini-SDM-precook.pl";
@@ -36,7 +37,8 @@ my $mq_mtype = 1;
 
 
 # end of config ~~~~~~~~~~~~~~~~~~~~
-
+#
+# local include files:
 
 require ('./my_debugs.pl');
 
@@ -48,6 +50,11 @@ our $MAX_nvals;
 our %Counterlist;
 our @all_selectors;
 require ('./my_counters.pm');
+
+our %RRD_definitions ;
+our ($RRD_dir , $RRD_prefix, $RRD_sprintf ); # = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
+require ('./rrd_def.pm');
+
 
 if ($Debug >=3) {
   debug_print ( 3,  Data::Dumper->Dump (
