@@ -255,8 +255,18 @@ sub sdm_evaluate  {
   #	  $rtag =~ /^([R|Q])\:(\d):(\d{14})$/ ;
   for my $rtag ( sort grep { /^R\:(\d)$/ } keys %{$ch} ) {
 	  $rtag =~ /^R\:(\d)$/ ;
-	  printf  ("all=%s,  no=%d  \n",   $rtag,  $1  ) ;
+	  my $rspno = $1;
+	  printf  ("all=%s,  no=%d  \n",   $rtag, $rspno  ) ;
+	  my $lastrsp = $$ch{ 'R:'.$rspno }->{ 'last' };
+	  print "last: $lastrsp \n";
+	  my @data = @{$$ch{ 'R:'.$rspno.':'.$lastrsp }->{ data }} ;
+	 print join ( ', ', @data) , "\n" ; 
+	 # oops, this is still unprocessed modbus stuff
 
+	 my $qerytag = $$ch{ 'Q:'.$rspno }->{ tag };
+	 my @valuetags = @{$$wb{ $qerytag }->{ val_tags }};
+	print join ( ', ', @valuetags ) , "\n" ;
+ 
   }
   
   die "debug in -------------- sub sdm_evaluate -----------";
