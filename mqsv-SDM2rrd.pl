@@ -268,8 +268,8 @@ sub sdm_evaluate  {
 	 my $qerytag = $$ch{ 'Q:'.$rspno }->{ tag };
 	 my @valuetags = @{$$wb{ $qerytag }->{ val_tags }};
 	print join ( ', ', @valuetags ) , "\n" ;
-	my @result = SDM_parse_response(@data);
-	print join ( '; ', @valuetags ) , "\n" ;
+	my @result = SDM_parse_response_ary( \@data, 1      );
+	print join ( '; ', @result ) , " - so what? \n" ;
  
   }
   
@@ -302,17 +302,18 @@ sub sdm_evaluate  {
 # parse SDM response,
 # @floats = SDM_parse_response ( \@response, $device_ID, $n_regs)
 sub SDM_parse_response_ary {
-  my ($p_response, $device_ID, $n_regs) = @_ ;
+  my ($p_response, $device_ID) = @_ ;
 
   # unless (defined $response) {
   # 	  debug_printf(2, "low level read timeout");
   #	  return ();
   # }
 
-  return () unless ( $#_ == 2 );
+  # return () unless ( $#_ ==  );
   # my @rsp = string2array ($response);
   my @rsp =@{$p_response};
-  my $response = string2array(@rsp);
+  my $response = array2string(@rsp);
+  my $n_regs = ( scalar @rsp - 5 ) / 4;
 
   # print debug_hexdump( \@rsp) , "\n";
 
@@ -393,7 +394,19 @@ sub modbusCRC {
 }
 
 
+sub number2bytes {
+  my (  $number, $bytes ) = @_;
+  my @res;
+  while ( $bytes > 0 ) {
+    push ( @res, ($number & 0xff) );
+    $bytes-- ;
+    $number >>= 8 ;
+  }
+  return reverse @res ;
+}
+
 # ----------------- generic little helpers ------------------------
+
 
 # take some binary string and return printable hexdump
 sub debug_str_hexdump {
