@@ -290,6 +290,22 @@ sub perform_rrd_update {
    # look up the rrd definitions
    my @rrds = @{$Counterlist{ $ct }->{ rrds }} ;
 
+   # build an overall tag-> value hash
+   my %t_v =();
+   foreach my $rspnum (0 .. $#requests) {
+     my $lastrun = $$p_cache{ sprintf ("R:%s", $rspnum) }->{ last } ;
+     my %rsph = %{$$p_cache{ sprintf ("R:%s:%014d", $rspnum, $lastrun) }} ;
+     print Data::Dumper->Dump ( [ \%rsph ] , [ qw( *rsph ) ] ) ;
+
+     foreach  ( 0 ..  $#{$rsph{ val_tags}} ) {
+	     my $vtg = ${$rsph{ val_tags}}[ $_ ] ;
+	     my $svl = ${$rsph{ SDMvalues}}[ $_ ] ;
+	     if ( $vtg  and defined $svl ) { $t_v{ $vtg } = $svl ; } 
+     }
+
+   }
+   print Data::Dumper->Dump ( [ \%t_v ] , [ qw( *vt ) ] ) ;
+
    print "counter: $ct, rrds: ", join (',', @rrds) , "\n";
    for my $rrd_tag (@rrds) {
          my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
