@@ -24,12 +24,12 @@ use Cwd qw( realpath );
 
 use RRDs();
 
+
+our $Debug = 0;
+
 # helper to extract the counter configuration
 my $precooker = "./infini-SDM-precook.pl";
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
-
-our $Debug = 0; 
-
 my @counter_tags = qw ( mains mains_d  );
 
 my $mq_ref = "./message_queue.kilroy" ;
@@ -88,7 +88,7 @@ if ($Debug >=999) {
 }
 
 #----------------------
-# build a hash structure to store(?)/index our data received
+# build a (constant) hash structure to backref our data received
 # $wayback{ 'query-tag' }->{ 'time' }->values[]
 #                           +-some-indices-let's see.... 
 #
@@ -103,7 +103,7 @@ if ($Debug >=999) {
 
 
 
-my %wayback ;
+our %wayback ;
 
 foreach my $rq (@requests) {
 	# my @byte_str = split ';' , $rq;
@@ -180,31 +180,23 @@ while (1) {
 	my $rq_tlast = $cache{   $peer_q }->{ last } ;
 	my $dev_ID   = $wayback{ $rq_tag }->{ devID } ; 
 
-
-	# print "=== peer_q=",   $peer_q ;
-	# print ", rq_tag=",  $rq_tag ;
-	# print ", rq_tlast=",  $rq_tlast ;
-	# print ", dev_ID=" , $dev_ID ;
-	# print "\n";
-
-
 	debug_printf (5, "peer_q=%s, rq_tag=%s, rq_tlast=%s, dev_ID=%s, ", $peer_q, $rq_tag, $rq_tlast, -9999);
 
 	if ( $rq_tlast and $rq_tlast == $starttime ) { # then we believe in a clean bus state
 		my $r_tag_time = sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime );
 
 		my $val_tags = $wayback{ $rq_tag }->{ val_tags } ;
+		my @vals = SDM_parse_response_ary( \@datary, $dev_ID       );
 
+		# grab anything available, we never know what we may need after dancing rock'n roll
 		$cache{ $r_tag_time } = { 
 			data_array => \@datary , 
-			data_hr => $data_hr ,
-			query_tag => $rq_tag, 
-			devID => $dev_ID , 
-			val_tags => $val_tags };
-
-		my @vals = SDM_parse_response_ary( \@datary, $dev_ID       );
-		 
-		$cache{ $r_tag_time }->{ SDMvalues } = \@vals  ;
+			data_hr    => $data_hr ,
+			query_tag  => $rq_tag, 
+			devID      => $dev_ID , 
+			SDMvalues  => \@vals, 
+			val_tags   => $val_tags ,
+		};
 
 	} else {
 		# die "garbage date I soppose? "; # TODO
@@ -235,7 +227,7 @@ while (1) {
   # loop over indexes of requests (but the first aka [0]) , count the hits of R and Q labels, 
   # 	and if there are >= 6 we might have a complete data set
   if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (0 .. $#requests) ) ) >= scalar  @requests ) {
-	  # die " we hit a all other counter case";
+	  print " we hit a all other counter case\n";
 	  # TODO what ist to be done
 	  # $counter_tags[0] might tell us what exactly
 	  # we want to do a rrdupdate, so we need
@@ -247,17 +239,32 @@ while (1) {
 	  # - merge known values
 	  # - %Counterlist->{ rrds }[0] --- -> rrd database name
 	  # - %RRD_definitions
-	  my $counter = $counter_tags[1];
-	  my @rrds = @{$Counterlist{ $counter }->{ rrds }} ;
-	  print "counter: $counter, rrds: ", join (',', @rrds) , "\n";
-	  for my $rrd_tag (@rrds) {
-		  my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
-		  print "fields of $rrd_tag:" , join (',', @fields ) , "\n"; 
-	  }
-	# get the values to the tags
-	# my $foo =  sdm_evaluate ( \%wayback, \%cache );
- 
+ # ~~~~~~~~~~~~~~~~~~~~~ BS per 2021-01-10 ? ~~~~~~~~~~~~~~~~~~~~~~~~~~+
+ # what we know in our cache:
+ #
+ #    'R:0:01610307266184' => {
+ #               'query_tag' => '01:04:00:34:00:02:30:05',
+ #               'data_array' => [ 1 4  4 69 14  225 240 199 95   ],
+ #               'devID' => 1,
+ #               'data_hr' => '01:04:04:45:0e:e1:f0:c7:5f',
+ #               'SDMvalues' => [  '2286.12109375'
+ #               'val_tags' =>  [  'Ptot'   ],
+ #         }
 
+ 	 #  my $counter = $counter_tags[1];
+	 #  my @rrds = @{$Counterlist{ $counter }->{ rrds }} ;
+	 #  print "counter: $counter, rrds: ", join (',', @rrds) , "\n";
+	 #  for my $rrd_tag (@rrds) {
+	 #	  my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
+	 #	  print "fields of $rrd_tag:" , join (',', @fields ) , "\n"; 
+	 #  }
+	 #
+ # counter: mains_d, rrds: totalP,E_unidir,elbasics,elquality
+ # fields of totalP:Ptot
+ # fields of E_unidir:E1_sld,E2_sld,E3_sld,E_sld
+ # fields of elbasics:P1,P2,P3,I1,I2,I3,U1,U2,U3
+ # fields of elquality:F,VAr1,VAr2,VAr3,VArtot,thdI1,thdI2,thdI3,thdItot,thdU1,thdU2,thdU3,thdUtot
+	my $status = perform_rrd_update ( \%cache, $counter_tags[1] ) ;
   
 
 	  die " ~~~~~~~~~~~~~~~ we hit a all other counter case ~~~~~~~~~~~~~~~~~~~~~~+" ;
@@ -275,11 +282,28 @@ exit 1;
 
 # ===================== sub section ===================================================================
 
+
+# $status = perform_rrd_update ( \%cache, $counter_tag )
+sub perform_rrd_update {
+   my ($p_cache, $ct)  = @_ ;
+
+   # look up the rrd definitions
+   my @rrds = @{$Counterlist{ $ct }->{ rrds }} ;
+
+   print "counter: $ct, rrds: ", join (',', @rrds) , "\n";
+   for my $rrd_tag (@rrds) {
+         my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
+         print "fields of $rrd_tag:" , join (',', @fields ) , "\n";
+   }
+   return undef;
+}
+
+
 # check cache status and decide how to proceed
 
 # hang on, what's going on here???
 #  sdm_evaluate ( \%wayback, \%cache )  
-sub sdm_evaluate  {
+sub sdm_evaluate_THISMIGHTBEBULLSHITT  {
   my ($wb, $ch) = @_ ;
   # print Data::Dumper->Dump ( [ $wb, $ch] , [ qw(  *wb *ch ) ] );
   print Data::Dumper->Dump ( [ $ch] , [ qw(  *ch ) ] );
