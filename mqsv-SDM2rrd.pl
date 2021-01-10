@@ -202,8 +202,9 @@ while (1) {
 			devID => $dev_ID , 
 			val_tags => $val_tags };
 
-		# my @vals = SDM_parse_response_ary( \@datary, $dev_ID       );
-		# $cache{ $r_tag_time }->{ SDMvals } = \@datary ;
+		my @vals = SDM_parse_response_ary( \@datary, $dev_ID       );
+		 
+		$cache{ $r_tag_time }->{ SDMvalues } = \@vals  ;
 
 	} else {
 		# die "garbage date I soppose? "; # TODO
