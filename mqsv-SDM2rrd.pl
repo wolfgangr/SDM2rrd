@@ -192,7 +192,8 @@ while (1) {
 
 	if ( $rq_tlast and $rq_tlast == $starttime ) { # then we believe in a clean bus state
 		my $r_tag_time = sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime );
-		$cache{ $r_tag_time } = { raw => \@datary , tag => $rq_tag, devID => $dev_ID };
+		$cache{ $r_tag_time } = { data_array => \@datary , data_hr => $data_hr ,
+			query_tag => $rq_tag, devID => $dev_ID };
 
 		# my @vals = SDM_parse_response_ary( \@datary, $dev_ID       );
 		# $cache{ $r_tag_time }->{ SDMvals } = \@datary ;
