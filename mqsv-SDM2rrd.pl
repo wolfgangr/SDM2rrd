@@ -233,7 +233,9 @@ while (1) {
 
 exit 1;
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ===================== sub section ===================================================================
+
+# check cache status and decide how to proceed
 
 # hang on, what's going on here???
 #  sdm_evaluate ( \%wayback, \%cache )  
@@ -266,6 +268,8 @@ sub sdm_evaluate  {
 	 my $qerytag = $$ch{ 'Q:'.$rspno }->{ tag };
 	 my @valuetags = @{$$wb{ $qerytag }->{ val_tags }};
 	print join ( ', ', @valuetags ) , "\n" ;
+	my @result = SDM_parse_response(@data);
+	print join ( '; ', @valuetags ) , "\n" ;
  
   }
   
@@ -290,6 +294,106 @@ sub sdm_evaluate  {
   die "debug in -------------- sub sdm_evaluate -----------";
 }
 
+
+
+# ----------- parse SDM Modbus response ---------------
+#
+
+# parse SDM response,
+# @floats = SDM_parse_response ( \@response, $device_ID, $n_regs)
+sub SDM_parse_response_ary {
+  my ($p_response, $device_ID, $n_regs) = @_ ;
+
+  # unless (defined $response) {
+  # 	  debug_printf(2, "low level read timeout");
+  #	  return ();
+  # }
+
+  return () unless ( $#_ == 2 );
+  # my @rsp = string2array ($response);
+  my @rsp =@{$p_response};
+  my $response = string2array(@rsp);
+
+  # print debug_hexdump( \@rsp) , "\n";
+
+  # last 2 bytes is crc, everything else goes into CRC check
+  my $crc_hi = pop @rsp; # poping from the end, crc is lo byte first order
+  my $crc_lo = pop @rsp;
+  # pop @rsp;
+  my @digest = modbusCRC ( \@rsp );
+  #printf ("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
+  #	  @digest, $crc_hi , $crc_lo );
+  unless ( $digest[1] == $crc_hi and $digest[0] == $crc_lo )  	{
+	  debug_printf( 5, "digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
+		@digest, $crc_hi , $crc_lo );
+	  debug_printf( 3, "SDM response crc mismatch" );
+  }
+
+  # 3 bytes, $n_regs x 4-bit unsigned (don't unpack let decode them), H4 aka 16 bit crc at tha end
+  # see https://perldoc.perl.org/functions/pack .... n or S
+  my @unpacked = unpack ( 'C' x 3 . 'N' x $n_regs . 'n' , $response );
+
+  my $u_len = scalar @unpacked ;
+  # return undef if scalar @unpacked < $n_regs + 4;
+  my $r_crc =  pop @unpacked ;
+
+  my $r_did = shift @unpacked;
+  unless ( $r_did  == $device_ID ) {
+  	debug_printf(3, "SDM response device ID mismatch 0x%02x -> 0x%02x ", $device_ID, $r_did ) ;
+	return ();
+  }
+
+  my $r_cmd = shift @unpacked ;
+  unless ( $r_cmd  == 0x04 ) {
+  	debug_printf(3, "SDM response cmd ID mismatch - expect 0x04, got 0x%02x ",  $r_cmd ) ;
+        return ();
+  }
+
+  my $r_len = shift @unpacked ;
+  my $r_len_want = $n_regs *4  ;
+  unless ( $r_len  == $r_len_want ) {
+	debug_printf(3, "SDM indicated response length mismatch - want %d, got %d", $r_len_want, $r_len ) ;
+	return ();
+  }
+
+  my @floats = map { decodeIEE754($_) } @unpacked ;
+  unless ( scalar @floats == $n_regs) { 
+	  debug_print (3, "SDM response variable number mismatch" ) ;
+  } 
+
+  # printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
+  #     $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
+  # todo OK: don't die - if happens (shit) return undef;
+  return ( @floats) ;
+}
+
+
+# ----------- protocol specific helpers --------
+#
+# decodeIEE754
+sub decodeIEE754 {
+  my $word = shift;
+  return 0 unless $word;
+  my $sign = ($word & 0x80000000) ? -1 : 1;
+  my $expo = (($word & 0x7F800000) >> 23) - 127;
+  my $mant = ($word & 0x007FFFFF | 0x00800000);
+  return  $sign * (2 ** $expo) * ( $mant / (1 << 23));
+}
+
+# sub modbusCRC ( \@data )
+# accepts an array of byte data
+# returns list of 2 bytes in array
+sub modbusCRC {
+  my $ary = shift @_;
+  my $ctx = Digest::CRC->new(width=>16 , init=>0xffff, poly=>0x8005 , refin => 1, refout => 1) ;
+  foreach my $x ( @$ary ) {
+    $ctx->add ( chr $x) ;
+  }
+  return  reverse number2bytes ($ctx->digest, 2) ;
+}
+
+
+# ----------------- generic little helpers ------------------------
 
 # take some binary string and return printable hexdump
 sub debug_str_hexdump {
