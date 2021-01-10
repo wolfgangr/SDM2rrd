@@ -88,7 +88,7 @@ my $MQ  = IPC::Msg->new($our_ftok     ,  S_IWUSR | S_IRUSR |  IPC_CREAT )
 	or die sprintf ( "cant create mq using token >0x%08x< ", $our_ftok  );
 
 # can we increase the thingie to 10 MB?
-$MQ->set ( qbytes => 16000000  ); # 1e7 );
+# $MQ->set ( qbytes => 16000000  ); # 1e7 );
 
 #~~~~~~~~~~ prep header of main  loop
 my$buf;
@@ -106,7 +106,7 @@ while (1) {
 	# printf  "-%02d = " , $cnt, ;
 	my $status = sysread $MODBUS, $buf, 1024 ;
 	my $rectime = gettimeofday * 1000 ;
-	printf  "R: %02d at %s:" , $cnt,  my_timetag ( $rectime, $starttime) ;
+	printf  "r: %02d at %s:" , $cnt,  my_timetag ( $rectime, $starttime) ;
 	
 
 	if ($status) {

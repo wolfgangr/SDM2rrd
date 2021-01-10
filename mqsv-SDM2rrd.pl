@@ -126,7 +126,8 @@ foreach my $rq (@requests) {
 	}	
 
 	my %rqdef = (reg_start=> $reg_start,  reg_num=>  $reg_num,  qry_tag=> $qry_tag ,
-		val_tags => \@val_tags , param_min => $param_min,  param_max => $param_max);
+		val_tags => \@val_tags , param_min => $param_min,  param_max => $param_max, 
+		devID => $ID );
 	$wayback{ $qry_tag } = \%rqdef;
 }
 
@@ -167,11 +168,41 @@ while (1) {
   # print "back-test  ",  , "\n"; 
   # print Data::Dumper->Dump ( [ \@datary ] , [ qw( *datary) ]  );
 
-  $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq)  } = { last => $starttime, };
+  $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq)  } = { last => $starttime,  foo => 'bar'};
   if ($mq_qa eq 'Q')  {
-	  $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq  ) } = { tag => $data_hr };
+	  # when everything is OK, the label always will be overrwritten
+	  # when we have garbage on the bus, BS may occur
+	  my $q_tag = sprintf("%1s:%1d", $mq_qa, $mq_rq  );
+	  $cache{ $q_tag }->{ tag}  =  $data_hr  ; # ,  substr($data_hr, 0, 2)
   } elsif ($mq_qa eq 'R')   {
-  	$cache{ sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime ) } = { data => \@datary };
+	my $peer_q = sprintf("Q:%1d",  $mq_rq  );  
+	my $rq_tag   = $cache{   $peer_q }->{ tag } ;
+	my $rq_tlast = $cache{   $peer_q }->{ last } ;
+	my $dev_ID   = $wayback{ $rq_tag }->{ devID } ; 
+
+
+	# print "=== peer_q=",   $peer_q ;
+	# print ", rq_tag=",  $rq_tag ;
+	# print ", rq_tlast=",  $rq_tlast ;
+	# print ", dev_ID=" , $dev_ID ;
+	# print "\n";
+
+
+	debug_printf (5, "peer_q=%s, rq_tag=%s, rq_tlast=%s, dev_ID=%s, ", $peer_q, $rq_tag, $rq_tlast, -9999);
+
+	if ( $rq_tlast and $rq_tlast == $starttime ) { # then we believe in a clean bus state
+		my $r_tag_time = sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime );
+		$cache{ $r_tag_time } = { raw => \@datary , tag => $rq_tag, devID => $dev_ID };
+
+		# my @vals = SDM_parse_response_ary( \@datary, $dev_ID       );
+		# $cache{ $r_tag_time }->{ SDMvals } = \@datary ;
+
+	} else {
+		# die "garbage date I soppose? "; # TODO
+		debug_print( 3, "garbage date I soppose? " );
+	}
+
+
   } else {
 	die " illegal data type token - hang on, how did I come here??? ";
   }
@@ -241,7 +272,8 @@ exit 1;
 #  sdm_evaluate ( \%wayback, \%cache )  
 sub sdm_evaluate  {
   my ($wb, $ch) = @_ ;
-  print Data::Dumper->Dump ( [ $wb, $ch] , [ qw(  *wb *ch ) ] );
+  # print Data::Dumper->Dump ( [ $wb, $ch] , [ qw(  *wb *ch ) ] );
+  print Data::Dumper->Dump ( [ $ch] , [ qw(  *ch ) ] );
   # so we see
   # - wb{ '01:04:00:ea:00:12:51:f3' }  -> { 'val_tags' } => [ .... 'U1', 'U2', ....
   # ch{ ....
