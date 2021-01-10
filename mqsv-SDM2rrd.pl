@@ -300,7 +300,10 @@ sub perform_rrd_update {
      foreach  ( 0 ..  $#{$rsph{ val_tags}} ) {
 	     my $vtg = ${$rsph{ val_tags}}[ $_ ] ;
 	     my $svl = ${$rsph{ SDMvalues}}[ $_ ] ;
-	     if ( $vtg  and defined $svl ) { $t_v{ $vtg } = $svl ; } 
+	     if ( $vtg ) { 
+		     # we came thus far - we'll not bother for missing vars any more
+		     $t_v{ $vtg } = defined ($svl) ? $svl : 'U' ; 
+	     } 
      }
 
    }
@@ -309,7 +312,22 @@ sub perform_rrd_update {
    print "counter: $ct, rrds: ", join (',', @rrds) , "\n";
    for my $rrd_tag (@rrds) {
          my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
-         print "fields of $rrd_tag:" , join (',', @fields ) , "\n";
+         my $rrd_template = join ( ':', @fields);
+	 my $rrd_values = join ( ':', 'N', 
+		 map { ($t_v{ $_}  )  } @fields ) ;
+
+         print "tags: ", $rrd_template   , "\n";
+	 print "values: ", $rrd_values , "\n";
+
+         my $rrdfile = sprintf $RRD_sprintf, $RRD_dir, $RRD_prefix, $ct, $rrd_tag;
+         print "rrd file: ", $rrdfile , "\n"; 
+
+         RRDs::update($rrdfile, '--template', $rrd_template, $rrd_values);
+         if ( RRDs::error ) {
+             debug_printf (2, "error updating RRD %s: %s \n", $rrdfile , RRDs::error ) ;
+         } else {
+             debug_print(4, "rrd update succesful\n");
+         }
    }
    return undef;
 }
