@@ -219,7 +219,9 @@ while (1) {
   if ( $cache{ 'R:0' } and $cache{ 'Q:0' } ) {
 	  # we have all we need - ptot, times , definitions
 	   print " we hit a ptot case\n";
+	my $status = perform_rrd_update ( \%cache, $counter_tags[ 0 ] ) ;
 	# TODO what ist to be done
+	
   } 
 
   # this is a bit crude, assumes we have on ptot in $requests[0] and sth like 1..3 in the rest
@@ -229,27 +231,18 @@ while (1) {
   if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (0 .. $#requests) ) ) >= scalar  @requests ) {
 	  print " we hit a all other counter case\n";
 	  # TODO what ist to be done
-	  # $counter_tags[0] might tell us what exactly
-	  # we want to do a rrdupdate, so we need
-	  # - the correct rrd name
-	  # - the value list
-	  # - the values
-	  #
-	  # try: 
-	  # - merge known values
-	  # - %Counterlist->{ rrds }[0] --- -> rrd database name
-	  # - %RRD_definitions
- # ~~~~~~~~~~~~~~~~~~~~~ BS per 2021-01-10 ? ~~~~~~~~~~~~~~~~~~~~~~~~~~+
- # what we know in our cache:
- #
- #    'R:0:01610307266184' => {
- #               'query_tag' => '01:04:00:34:00:02:30:05',
- #               'data_array' => [ 1 4  4 69 14  225 240 199 95   ],
- #               'devID' => 1,
- #               'data_hr' => '01:04:04:45:0e:e1:f0:c7:5f',
- #               'SDMvalues' => [  '2286.12109375'
- #               'val_tags' =>  [  'Ptot'   ],
- #         }
+ 
+	 # ~~~~~~~~~~~~~~~~~~~~~ BS per 2021-01-10 ? ~~~~~~~~~~~~~~~~~~~~~~~~~~+
+	 # what we know in our cache:
+	 #
+	 #    'R:0:01610307266184' => {
+	 #               'query_tag' => '01:04:00:34:00:02:30:05',
+	 #               'data_array' => [ 1 4  4 69 14  225 240 199 95   ],
+	 #               'devID' => 1,
+	 #               'data_hr' => '01:04:04:45:0e:e1:f0:c7:5f',
+	 #               'SDMvalues' => [  '2286.12109375'
+	 #               'val_tags' =>  [  'Ptot'   ],
+	 #         }
 
  	 #  my $counter = $counter_tags[1];
 	 #  my @rrds = @{$Counterlist{ $counter }->{ rrds }} ;
@@ -259,15 +252,11 @@ while (1) {
 	 #	  print "fields of $rrd_tag:" , join (',', @fields ) , "\n"; 
 	 #  }
 	 #
- # counter: mains_d, rrds: totalP,E_unidir,elbasics,elquality
- # fields of totalP:Ptot
- # fields of E_unidir:E1_sld,E2_sld,E3_sld,E_sld
- # fields of elbasics:P1,P2,P3,I1,I2,I3,U1,U2,U3
- # fields of elquality:F,VAr1,VAr2,VAr3,VArtot,thdI1,thdI2,thdI3,thdItot,thdU1,thdU2,thdU3,thdUtot
-	my $status = perform_rrd_update ( \%cache, $counter_tags[1] ) ;
+
+ 	 my $status = perform_rrd_update ( \%cache, $counter_tags[1] ) ;
   
 
-	  die " ~~~~~~~~~~~~~~~ we hit a all other counter case ~~~~~~~~~~~~~~~~~~~~~~+" ;
+	#  die " ~~~~~~~~~~~~~~~ we hit a all other counter case ~~~~~~~~~~~~~~~~~~~~~~+" ;
 
   }
 
@@ -294,6 +283,8 @@ sub perform_rrd_update {
    my %t_v =();
    foreach my $rspnum (0 .. $#requests) {
      my $lastrun = $$p_cache{ sprintf ("R:%s", $rspnum) }->{ last } ;
+     return 0 unless defined $lastrun ;
+
      my %rsph = %{$$p_cache{ sprintf ("R:%s:%014d", $rspnum, $lastrun) }} ;
      print Data::Dumper->Dump ( [ \%rsph ] , [ qw( *rsph ) ] ) ;
 
@@ -325,11 +316,13 @@ sub perform_rrd_update {
          RRDs::update($rrdfile, '--template', $rrd_template, $rrd_values);
          if ( RRDs::error ) {
              debug_printf (2, "error updating RRD %s: %s \n", $rrdfile , RRDs::error ) ;
+	     return 0;
          } else {
              debug_print(4, "rrd update succesful\n");
+	     return 1;
          }
    }
-   return undef;
+   # return undef;
 }
 
 
