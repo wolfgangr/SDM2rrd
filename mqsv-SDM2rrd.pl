@@ -299,6 +299,8 @@ sub sdm_evaluate  {
 # ----------- parse SDM Modbus response ---------------
 #
 
+# TODO this really is a mess, but, sadly enough, it works ;-)
+#
 # parse SDM response,
 # @floats = SDM_parse_response ( \@response, $device_ID, $n_regs)
 sub SDM_parse_response_ary {
