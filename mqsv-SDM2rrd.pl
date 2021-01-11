@@ -160,40 +160,38 @@ if ( $Debug >=6 ) {
 } 
 
 
+# =========================================== Begin of main loop ==============
 my $cnt =1;
-# my %cache= ( trace => 'start' ); # don't trap into undef'd hash pointers
 my %cache= ();
 while (1) {
 
   my $buf;
-  # $mq_my->rcv($buf, 1024, 1 , IPC_NOWAIT  );
-
   $MQ->rcv($buf, 1024, $mq_mtype);
-  # print $buf , "\n" if $buf  ;
 
   my ($mq_qa, $mq_rq, $starttime , $data_hr) = split ( '\|'  , $buf);
   my @datary =  map (hex,  split ('\:', $data_hr) );
  
-  printf ("type=%s, no=%d, time=%014d, data (len=%d): %s  \n", $mq_qa, $mq_rq, $starttime , scalar @datary ,  $data_hr  );
-  # print "back-test  ",  , "\n"; 
-  # print Data::Dumper->Dump ( [ \@datary ] , [ qw( *datary) ]  );
+  debug_printf (3,  ("type=%s, no=%d, time=%014d, data (len=%d): %s  \n", 
+		  $mq_qa, $mq_rq, $starttime , scalar @datary ,  $data_hr  ) );
 
-  # register any response no matter whether valid
+  # register timetag of any response, no matter whether valid
   $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq)  } = { last => $starttime,  foo => 'bar'};
 
+  # .... postprocessing message to populate cache
   if ($mq_qa eq 'Q')  {
 	  # when everything is OK, the label always will be overrwritten
 	  # when we have garbage on the bus, BS may accumulate
 	  my $q_tag = sprintf("%1s:%1d", $mq_qa, $mq_rq  );
-	  $cache{ $q_tag }->{ tag}  =  $data_hr  ; # ,  substr($data_hr, 0, 2)
+	  $cache{ $q_tag }->{ tag}  =  $data_hr  ; 
 
   } elsif ($mq_qa eq 'R')   {
+	# build reference back from counter response to query
 	my $peer_q = sprintf("Q:%1d",  $mq_rq  );  
 	my $rq_tag   = $cache{   $peer_q }->{ tag } ;
 	my $rq_tlast = $cache{   $peer_q }->{ last } ;
 	my $dev_ID   = $wayback{ $rq_tag }->{ devID } ; 
 
-	debug_printf (5, "adding R row - peer_q=%s, rq_tag=%s, rq_tlast=%s, dev_ID=%s, \n", $peer_q, $rq_tag, $rq_tlast, -9999);
+	debug_printf (4, "adding R row - peer_q=%s, rq_tag=%s, rq_tlast=%s, dev_ID=%s, \n", $peer_q, $rq_tag, $rq_tlast, -9999);
 
 	if ( $rq_tlast and $rq_tlast == $starttime ) { # then we believe in a clean bus state
 		my $r_tag_time = sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime );
@@ -201,7 +199,7 @@ while (1) {
 		my $val_tags = $wayback{ $rq_tag }->{ val_tags } ;
 		my @vals = SDM_parse_response_ary( \@datary, $dev_ID       );
 
-		# grab anything available, we never know what we may need after dancing rock'n roll
+		# grab anything available, for use after dancing rock'n roll
 		$cache{ $r_tag_time } = { 
 			data_array => \@datary , 
 			data_hr    => $data_hr ,
@@ -213,34 +211,32 @@ while (1) {
 
 	} else {
 		# die "garbage date I soppose? "; # TODO
-		debug_print( 3, "garbage date I soppose? " );
+		debug_print( 1, "misstructured query-response-pattern - garbage on the bus? " );
 	}
 
 
   } else {
-	die " illegal data type token - hang on, how did I come here??? ";
+	debug_print( 1,  " illegal data type token - hang on, how did I come here??? ") ;
   }
 
-  ### print Data::Dumper->Dump ( [ \%cache ] , [  qw ( *cache) ] );
-  # sleep ;
+  # postprocessing complete
+  debug_print (5,  Data::Dumper->Dump ( [ \%cache ] , [  qw ( *cache) ] ) ) if ($Debug >= 5) ;
+  
   $cnt++;
 
 
 
-  # =========  what can we do?-------------------------------
+  # === check cache accumulation aka 'what can we do?' -------------------------------
 
-  print(map ( ( "\t- " . $_ . "\n"      ), (  sort keys ( %cache ))) )  ;
+  debug_print( 4 , map ( ( "\t- " . $_ . "\n"      ), (  sort keys ( %cache ))) ) if ( $Debug >= 4)    ;
 
 
-  # if 'R:0'->last ....  and 'Q:0'->tag=> ... process R:0:{time} -> data .... cleanup
-  # if R:1 & R:2 & R:3 ... & ... data ... processs... otherstuff..... cleanup
-  # if we have more than whatever (20 ?) records in %cache we may die
+  # not nice to hardcode this.... but KISS 
   if ( $cache{ 'R:0' } and $cache{ 'Q:0' } ) {
-	  # we have all we need - ptot, times , definitions
-	   print " we hit a ptot case\n";
+        # we have all we need - ptot, times , definitions
+        debug_print (3, " we hit a ptot case\n") ;
 	my $status = perform_rrd_update ( \%cache, $counter_tags[ 0 ] ) ;
-	# TODO what ist to be done
-	
+    	
   } 
 
   # this is a bit crude, assumes we have on ptot in $requests[0] and sth like 1..3 in the rest
