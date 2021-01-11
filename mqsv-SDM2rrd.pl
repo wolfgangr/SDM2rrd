@@ -268,7 +268,9 @@ while (1) {
   }
 
   if (scalar keys %cache >20 ) {
-	die "looks like our cache is clobbered with BS stuff .... ";
+	  # crude cleanup
+	  %cache = ();
+	# die "looks like our cache is clobbered with BS stuff .... ";
 	# TODO what ist to be done
 
   }
