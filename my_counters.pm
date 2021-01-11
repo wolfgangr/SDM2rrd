@@ -36,7 +36,7 @@ $Counterlist{'mains'} = {
 	Label => 'Hausanschluss',
         # direction => 1,
         selectors => [ [ 'Ptot' ] ] ,
-	rrds => [ qw( totalP )],
+	rrds => [ qw( totalP_hires )],
 };
 
 
@@ -46,7 +46,7 @@ $Counterlist{'mains_d'} = {
         Label => 'Hausanschluss Details',
         # direction => 1,
 	# selectors => [ [ 'Ptot' ] ] ,
-	# rrds => [ qw( totalP )],
+	# rrds => [ qw( totalP_hires )],
 };
 
 $Counterlist{'subs1'} = {

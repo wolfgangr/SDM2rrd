@@ -47,6 +47,22 @@ RRA:MAX:0.5:1h:2y
 EOF_TOTALP_RRA
 } ;
 
+# hi res for main counter
+$RRD_definitions{'totalP_hires'} = {
+        fields => [ qw( Ptot ) ],
+	step   => 1,
+	heartbeat => 1,
+        rradef => <<"EOF_TOTALP_RRAHI",
+RRA:AVERAGE:0.5:1s:1w
+RRA:AVERAGE:0.5:30s:1M
+RRA:AVERAGE:0.5:5m:1y
+RRA:MAX:0.5:5m:3M
+RRA:AVERAGE:0.5:1h:5y
+RRA:MAX:0.5:1h:2y
+EOF_TOTALP_RRAHI
+} ;
+
+
 my $simple_E_rra = <<"EOF_SE_RRA",
 RRA:LAST:0.5:30s:1M
 RRA:LAST:0.5:5m:3M
