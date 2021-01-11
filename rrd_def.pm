@@ -53,7 +53,7 @@ $RRD_definitions{'totalP_hires'} = {
 	step   => 1,
 	heartbeat => 1,
         rradef => <<"EOF_TOTALP_RRAHI",
-RRA:AVERAGE:0.5:1s:1w
+RRA:AVERAGE:0.3:1s:1w
 RRA:AVERAGE:0.5:30s:1M
 RRA:AVERAGE:0.5:5m:1y
 RRA:MAX:0.5:5m:3M

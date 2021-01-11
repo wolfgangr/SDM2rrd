@@ -183,8 +183,8 @@ while (1) {
 				my $sleep = int ($nextrun - $now) ;
 				$qry_pause_cnt = ($sleep>0) ?  $sleep : 0 ;
 
-				printf ("now=%d, nextrun=%d, modulo=%d, qry_pause_cnt=%d, sleep=%d \n", 
-					$now, $nextrun, $modulo, $qry_pause_cnt, $sleep );
+				# printf("now=%d, nextrun=%d, modulo=%d, qry_pause_cnt=%d, sleep=%d \n", 
+				# 	$now, $nextrun, $modulo, $qry_pause_cnt, $sleep );
 			} else {
 				$qry_pause_cnt = $inter_query_stepping ;
 			}
