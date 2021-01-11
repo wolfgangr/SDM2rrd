@@ -16,6 +16,7 @@ our $Debug = 3;
 require ('./my_debugs.pl');
 
 our $sdm_def_file;
+
 our (@SDM_regs , %SDM_reg_by_tag , %SDM_selectors);
 require ('./extract-SDM-def.pm');
 
@@ -25,6 +26,7 @@ require ('./my_counters.pm');
 
 our %RRD_definitions ;
 our %SQL_export;
+our ( $RRD_dir , $RRD_prefix , $RRD_sprintf );
 require ('./rrd_def.pm');
 
 #debug_dumper (3, 
@@ -41,7 +43,7 @@ print STDERR " subset selection for SQL export: \n";
 
 
 my %sql_columns;
-foreach my $rrd (keys %RRD_definitions ) {
+for my $rrd (keys %RRD_definitions ) {
 
 
 	my $sxp = $SQL_export{ $rrd };
@@ -66,10 +68,10 @@ print STDERR Data::Dumper->Dump ( [  \%Counterlist  ]  , [ qw(   *Counterlist ) 
 
 my %sql_tables ;
 
-foreach my $c_tag ( sort keys %Counterlist ) {
+for my $c_tag ( sort keys %Counterlist ) {
 	my $c_ptr = $Counterlist{ $c_tag } ;
 	my $c_rrds = $c_ptr->{ rrds } ;
-	foreach my $c_rrd_tag ( @{$c_rrds} ) {
+	for my $c_rrd_tag ( @{$c_rrds} ) {
 
 		# if the tag at question defined in the counter is configured for SQL export...
 		if ( my $c_sql_c_p = $sql_columns{ $c_rrd_tag } ) {
@@ -80,18 +82,29 @@ foreach my $c_tag ( sort keys %Counterlist ) {
 }
 
 print STDERR Data::Dumper->Dump ( [  \%sql_tables  ]  , [ qw( *sql_tables    ) ]  );
+# out goodie for the consumer at STDOUT, if any:
+print STDOUT Data::Dumper->Dump ( [  \%sql_tables  ]  , [ qw( *sql_tables    ) ]  );
+
+# instruction for use
+
+my $db_sprintf = $RRD_sprintf ;
+$db_sprintf =~ s/\.rrd$/.sql/ ;
+
+for my $counter_tag ( sort keys %sql_tables ) {
+	my $table_list_p = $sql_tables{ $counter_tag } or next ;
+	for my $table_tag ( sort keys %$table_list_p ) {
+
+		printf STDERR $RRD_sprintf . " => " , $RRD_dir, $RRD_prefix , $counter_tag, $table_tag ;
+		printf STDERR  $db_sprintf . " \n" , $RRD_dir, $RRD_prefix , $counter_tag, $table_tag ;
 
 
-# debug_dumper (3, \%Counterlist);
-
-# my @all_selectors = map { $_ 
-#    keys 
-# } sort keys %SDM_selectors ;
-
-
+		my $col_list_p = $$table_list_p{ $table_tag } or next ;
+       		my @columns = @$col_list_p ;	
+		print STDERR "  has cols: ", join ( ', ', @columns) , "\n" ;
+	}
+}
 
 
-# debug_dumper (3, \@all_selectors );
 
 exit;
 
