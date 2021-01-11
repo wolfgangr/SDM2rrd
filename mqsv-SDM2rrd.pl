@@ -20,7 +20,7 @@ use Cwd qw( realpath );
 use RRDs();
 
 
-our $Debug = 2;
+our $Debug = 5;
 
 # debug levels:
 # 1 - log abnormal data coming in on MQ
@@ -161,6 +161,8 @@ if ( $Debug >=6 ) {
 # =========================================== Begin of main loop ==============
 my $cnt =1;
 my %cache= ();
+my $pt_lastrun = 0;
+
 while (1) {
 
   my $buf;
@@ -218,7 +220,7 @@ while (1) {
   }
 
   # postprocessing complete
-  debug_print (5,  Data::Dumper->Dump ( [ \%cache ] , [  qw ( *cache) ] ) ) if ($Debug >= 5) ;
+  debug_print (4,  Data::Dumper->Dump ( [ \%cache ] , [  qw ( *cache) ] ) ) if ($Debug >= 4) ;
   
   $cnt++;
 
@@ -230,12 +232,21 @@ while (1) {
 
 
   # not nice to hardcode this.... but KISS 
-  if ( $cache{ 'R:0' } and $cache{ 'Q:0' } ) {
-        # we have all we need - ptot, times , definitions
-        debug_print (2, " we hit a ptot case\n") ;
-	my $status = perform_rrd_update ( \%cache, $counter_tags[ 0 ] ) ;
-    	
-  } 
+  #   01:04:00:34:00:02:30:05
+
+  # state $Q_lastrun ;
+  my $last_R = $cache{ 'R:0' }->{ last };
+  if ( defined ($last_R)  and $last_R != $pt_lastrun   ) {
+	my $r0_timed = $cache{ sprintf ("R:0:%014d", $last_R) } ;
+        	if ( (defined $r0_timed) and ( defined ( my $sdm_vals = $r0_timed->{ SDMvalues } )) ) {  	
+			#	my $P_tot = $$sdm_vals[ 0 ] ;
+			# print "\tvalue:",  $P_tot, "\n" ;
+        		# we have all we need - ptot, times , definitions
+        	debug_print (2, " we hit a ptot case\n") ;
+
+		my $status = perform_rrd_update ( \%cache, $counter_tags[ 0 ] ,  [ $requests[0] ] ) ;
+	}
+  }     
 
   # precheck: loop over indexes of requests , count the hits of R and Q labels, 
   # 	and if the the number is enough , we might have a complete data set
@@ -254,7 +265,7 @@ while (1) {
 	 #               'val_tags' =>  [  'Ptot'   ],
 	 #         }
 
- 	 my $status = perform_rrd_update ( \%cache, $counter_tags[1] ) ;
+ 	 my $status = perform_rrd_update ( \%cache, $counter_tags[1] , \@requests ) ;
  	 if ($status) {
 		 # after successful update of all rrds we start with a fresh cache
 		 %cache = ();
@@ -279,9 +290,9 @@ exit 1;
 # ===================== END of Main loop - subs below ===================================================================
 
 
-# $status = perform_rrd_update ( \%cache, $counter_tag )
+# $status = perform_rrd_update ( \%cache, $counter_tag , \@requests )
 sub perform_rrd_update {
-   my ($p_cache, $ct)  = @_ ;
+   my ($p_cache, $ct, $rqp)  = @_ ;
 
    # look up the rrd definitions  
    my @rrds = @{$Counterlist{ $ct }->{ rrds }} ;
@@ -289,7 +300,7 @@ sub perform_rrd_update {
    # build an overall tag-> value hash
    my %t_v =();
    my $rrd_timestamp;
-   foreach my $rspnum (0 .. $#requests) {
+   foreach my $rspnum (0 .. $#$rqp) {
 
      my $lastrun = $$p_cache{ sprintf ("R:%s", $rspnum) }->{ last } ;
      return 0 unless defined $lastrun ;
