@@ -348,26 +348,16 @@ sub perform_rrd_update {
 sub SDM_parse_response_ary {
   my ($p_response, $device_ID) = @_ ;
 
-  # unless (defined $response) {
-  # 	  debug_printf(2, "low level read timeout");
-  #	  return ();
-  # }
-
-  # return () unless ( $#_ ==  );
-  # my @rsp = string2array ($response);
   my @rsp =@{$p_response};
   my $response = array2string(@rsp);
   my $n_regs = ( scalar @rsp - 5 ) / 4;
 
-  # print debug_hexdump( \@rsp) , "\n";
 
   # last 2 bytes is crc, everything else goes into CRC check
   my $crc_hi = pop @rsp; # poping from the end, crc is lo byte first order
   my $crc_lo = pop @rsp;
-  # pop @rsp;
   my @digest = modbusCRC ( \@rsp );
-  #printf ("digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
-  #	  @digest, $crc_hi , $crc_lo );
+
   unless ( $digest[1] == $crc_hi and $digest[0] == $crc_lo )  	{
 	  debug_printf( 5, "digest LSB=0x%0x HSB=0x%0x , crc HSB=0x%0x LSB=0x%0x \n",
 		@digest, $crc_hi , $crc_lo );
@@ -379,7 +369,6 @@ sub SDM_parse_response_ary {
   my @unpacked = unpack ( 'C' x 3 . 'N' x $n_regs . 'n' , $response );
 
   my $u_len = scalar @unpacked ;
-  # return undef if scalar @unpacked < $n_regs + 4;
   my $r_crc =  pop @unpacked ;
 
   my $r_did = shift @unpacked;
@@ -406,9 +395,6 @@ sub SDM_parse_response_ary {
 	  debug_print (3, "SDM response variable number mismatch" ) ;
   } 
 
-  # printf "n-regs=%d sc-unp=%d, sc-fl=%d, did=0x%02x cmd=0x%02x len=%d r-crc=0x%04x digHSB=%02x digLSB=%02x \n ",
-  #     $n_regs, $u_len , scalar @floats , $r_did, $r_cmd , $r_len, $r_crc,  @digest, ;
-  # todo OK: don't die - if happens (shit) return undef;
   return ( @floats) ;
 }
 
