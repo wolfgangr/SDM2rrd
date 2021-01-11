@@ -44,9 +44,9 @@ my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 
 
 # parameter for limiting bus load
-my $interval = 20 ; # seconds between additional query runs
+my $interval = 15 ; # seconds between additional query runs
 my $interval_shift = 7 ; # seconds shift from even interval modulos
-my $inter_query_stepping = 2 ; # how many native qry occasions to skip befor inserting extra qry
+my $inter_query_stepping = 3 ; # how many native qry occasions to skip befor inserting extra qry
 
 
 my $debug = 0; 
