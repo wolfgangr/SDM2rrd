@@ -44,9 +44,9 @@ my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 
 
 # parameter for limiting bus load
-my $interval = 15 ; # seconds between additional query runs
+my $interval = 20 ; # seconds between additional query runs
 my $interval_shift = 7 ; # seconds shift from even interval modulos
-my $inter_query_stepping = 4 ; # how many native qry occasions to skip befor inserting extra qry
+my $inter_query_stepping = 2 ; # how many native qry occasions to skip befor inserting extra qry
 
 
 my $debug = 0; 
@@ -161,20 +161,36 @@ while (1) {
 		}
 		
 		if ($ans_cnt == 1) {
-			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
-			# we have a SDM response, and will insert our multimaster query now
-			# ----- implement multimaster query timing
+                        # we have a SDM response, and might insert our multimaster query now
+                        # .... but ...: implement multimaster query timing
 
-			if ( --$qry_pause_cnt > 0) {
+			
+			next if ( --$qry_pause_cnt > 0) ;
 
-				next;
-			} # else {
-				# 	
-				# }
+			# reset the interquery selection counter
+			if ( ++$req_cnt > $#requests) { 
+				$req_cnt =0 ;
 
-			$qry_pause_cnt = $inter_query_stepping ;
+				# calculate pseudo 'sleep' time
+			        my $now = int (Time::HiRes::time());
+				# my $sleep = int ($nextrun - $now) ;
+				# $qry_pause_cnt = ($sleep>0) ?  $sleep : 0 ;
+				printf "old nr=%d ", $nextrun ;
+				# calculate next interval end timer
+				my $modulo = ( $now - $interval_shift) % $interval;	
+				$nextrun = $now + $interval  - $modulo ; #  + $interval;
+
+				my $sleep = int ($nextrun - $now) ;
+				$qry_pause_cnt = ($sleep>0) ?  $sleep : 0 ;
+
+				printf ("now=%d, nextrun=%d, modulo=%d, qry_pause_cnt=%d, sleep=%d \n", 
+					$now, $nextrun, $modulo, $qry_pause_cnt, $sleep );
+			} else {
+				$qry_pause_cnt = $inter_query_stepping ;
+			}
 
 			# ----- do the multimaster query
+			 
 			usleep ( 1e5 );
 			my $qry = $requests[$req_cnt ];
 			syswrite $MODBUS, $qry ;
