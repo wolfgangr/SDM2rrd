@@ -15,7 +15,7 @@ use warnings;
 
 use Data::Dumper ;
 
-use Time::HiRes () ;
+# use Time::HiRes () ; TODO: take timestamp from logger, not "N"
 use Digest::CRC ;
 use POSIX qw (floor);
 
@@ -26,13 +26,23 @@ use Cwd qw( realpath );
 use RRDs();
 
 
-our $Debug = 0;
+our $Debug = 3;
+
+# debug levels:
+# 1 - log abnormal data coming in on MQ
+# 2 - minimum trace normal operation
+# 3 - trace critical data normal operation
+# 4 - trace anything normal operation
+# 5 - hash dumps 
+# 6 - stop after MQ setup
+# 7 - stop after data structure setup
 
 # helper to extract the counter configuration
 my $precooker = "./infini-SDM-precook.pl";
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
 my @counter_tags = qw ( mains mains_d  );
 
+# sysV MQ needs a file descriptor for mutual identification - see 'man ftok'
 my $mq_ref = "./message_queue.kilroy" ;
 my $mq_mtype = 1;
 
@@ -56,23 +66,26 @@ our %RRD_definitions ;
 our ($RRD_dir , $RRD_prefix, $RRD_sprintf ); # = "%s/%s_%s_%s.rrd"; # $dir, $prefix, $countertag,  $rrdtag
 require ('./rrd_def.pm');
 
-# die "######### DEBUG ########";
+#  check setup:
 
-if ($Debug >=999) {
-  debug_print ( 3,  Data::Dumper->Dump (
+if ($Debug >= 5) {
+  debug_print ( 5,  Data::Dumper->Dump (
 	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
 	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  )
   );
 }
-# die "######### DEBUG ########";
+# die "### DEBUG level 7 ### - die after data structure setup " if ( $Debug >= 7) ;
 
 
-# do we need to read this in ? - just busy copying it's code over....
+#  read same precooked config than our line sniffer does - just a list of requests in hex dump form
+#  01:04:00:00:00:4c:f1:ff
+#  01:04:00:ea:00:12:51:f3
+#  01:04:01:56:00:16:90:28
 
 my @precooked = split ("\n",`$precooker`);
 my @pre_grepped = grep { ! /^#\s.*/ } @precooked ;
 
-my @requests = ( $startseq ) ; # this is our number 0 req def
+my @requests = ( $startseq ) ; # prepend our number 0 req def
 
 foreach my $l  (@pre_grepped) {
   my $rq;	
@@ -82,19 +95,17 @@ foreach my $l  (@pre_grepped) {
   push @requests, $rq;
 }
 
-if ($Debug >=999) {
-  printf "startseq: %s\nstructure of config reads;\n", debug_str_hexdump($startseq);
-  print Dumper (\@precooked , \@pre_grepped  );
-  foreach (@requests) { print debug_str_hexdump($_), "\n" ; }
+if ($Debug >= 5) {
+  debug_printf (5,  "startseq: %s\nstructure of config reads\n", debug_str_hexdump($startseq) ) ;
+  debug_print (5,  Dumper (\@precooked , \@pre_grepped  ) );
+  foreach (@requests) { debug_print (5, debug_str_hexdump($_), "\n"  ) ;  }
 }
 
 #----------------------
 # build a (constant) hash structure to backref our data received
-# $wayback{ 'query-tag' }->{ 'time' }->values[]
-#                           +-some-indices-let's see.... 
 #
 #  %wayback = (
-#       '_0034:0002' => {
+#       '_0034:0002' => {  TODO changed this to full hex string - KISS
 #           'qry_tag'   => '_0034:0002',
 #           'reg_start' => 52, 'reg_num'   => 2,
 #           'param_min' => 27, 'param_max' => 27,
@@ -102,24 +113,20 @@ if ($Debug >=999) {
 #                       },  
 #       '_0156:0016' => { .....
 
-
-
 our %wayback ;
 
 foreach my $rq (@requests) {
-	# my @byte_str = split ';' , $rq;
-	# print Dumper (\@byte_str); 
+	# parse connection strings in MODBUS request format
 	my ($ID, $x_04, $reg_start, $reg_num, $crc) = unpack ( 'CCnnn' , $rq); 
 	
-	# my $qry_tag = sprintf ("_%04x:%04x", $reg_start, $reg_num);
 	my $param_min = $reg_start/2 +1;
 	my $param_max = $param_min -1 + $reg_num/2;
 	
 	my $qry_tag =  debug_str_hexdump($rq);
-	print debug_str_hexdump($rq), "\n" ;
-	printf("ID=0x%02x cmd=0x%02x r-start=0x%04x n-reg=0x%04x crc=0x%04x - query-tag= '%s'", 
+	# debug_print (  debug_str_hexdump($rq), "\n" ;
+	debug_printf( 3, "ID=0x%02x cmd=0x%02x r-start=0x%04x n-reg=0x%04x crc=0x%04x - query-tag= '%s'", 
 		$ID, $x_04, $reg_start, $reg_num, $crc, $qry_tag );
-	printf(" params min=%d max=%d\n", $param_min , $param_max );
+	debug_printf( 3, " params min=%d max=%d\n", $param_min , $param_max );
 
 	my @val_tags =();
 	for ($param_min .. $param_max) {
@@ -133,27 +140,29 @@ foreach my $rq (@requests) {
 }
 
 
-$Debug=5;
-print Data::Dumper->Dump ( [ \%wayback ] , [ qw( *wayback) ]  );
+if ( $Debug >=5 ) {
+	debug_print (5,  Data::Dumper->Dump ( [ \%wayback ] , [ qw( *wayback) ]  ) );
+    if ( $Debug >=7 ) { 
+	die  "=== DEBUG level 7 ===== setup done ============= \n";
+}   }
 
-print "===================================== setup done =========================== \n";
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Open message queue ~~~~~~~~~~~~~~~
 
-# die "######### DEBUG ########";
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# open message queue ~~~~~~~~~~~~~~~
-
-# `touch $mq_ref` ; # make sure file exists
+`touch $mq_ref` ; # make sure file exists
 my $our_ftok = ftok (realpath ($mq_ref)) ;
-
-# my $MQ  = IPC::Msg->new($our_ftok     ,   S_IWUSR | S_IRUSR |  IPC_CREAT )
 
 my $MQ  = IPC::Msg->new($our_ftok     ,    S_IRUSR | S_IWUSR |  IPC_CREAT   )
 	or die sprintf ( "cant create mq using token >0x%08x< ", $our_ftok  );
 
-print " --- message queue open --- \n";
+debug_print (2,  " --- message queue open --- \n" ) ;
+if ( $Debug >=6 ) {
+        die  "=== DEBUG level 6 ===== mq open ============= \n";
+} 
+
 
 my $cnt =1;
-my %cache= ( trace => 'start' ); # don't trap into undef'd hash pointers
+# my %cache= ( trace => 'start' ); # don't trap into undef'd hash pointers
+my %cache= ();
 while (1) {
 
   my $buf;
@@ -254,19 +263,11 @@ while (1) {
 	 #               'val_tags' =>  [  'Ptot'   ],
 	 #         }
 
- 	 #  my $counter = $counter_tags[1];
-	 #  my @rrds = @{$Counterlist{ $counter }->{ rrds }} ;
-	 #  print "counter: $counter, rrds: ", join (',', @rrds) , "\n";
-	 #  for my $rrd_tag (@rrds) {
-	 #	  my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
-	 #	  print "fields of $rrd_tag:" , join (',', @fields ) , "\n"; 
-	 #  }
-	 #
-
  	 my $status = perform_rrd_update ( \%cache, $counter_tags[1] ) ;
  	 if ($status) {
 		 # after successful update of all rrds we start with a fresh cache
-		 %cache = ( trace => 'updated' );
+		 # %cache = ( trace => 'updated' );
+		 %cache = ();
 
 	 } else {
 		 debug_print ( 0, "all counter rrd update failed"); 
@@ -280,8 +281,10 @@ while (1) {
   }
 
   if (scalar keys %cache >20 ) {
-	  # crude cleanup
-	  %cache = ( trace => 'cleanup' );
+	  # cleanup and log in case of clobbered bus
+	  # value of 20 works for hours in tests without trigger
+	  %cache = (); 
+	  # %cache = ( trace => 'cleanup' );
 	  die "looks like our cache is clobbered with BS stuff .... ";
 	# TODO change this back to proper logging
 
