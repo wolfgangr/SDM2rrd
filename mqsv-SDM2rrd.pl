@@ -41,6 +41,10 @@ my $mq_ref = "./message_queue.kilroy" ;
 my $mq_mtype = 1;
 
 
+my $cachemax = 100 ; # max records to keep in cache before complaining
+
+
+
 # end of config ~~~~~~~~~~~~~~~~~~~~
 #
 # local include files:
@@ -262,7 +266,7 @@ while (1) {
 
   # cleanup cache and log in case of clobbered bus
   # value of 20 works for hours in tests without trigger
-  if (scalar keys %cache >20 ) {
+  if (scalar keys %cache > $cachemax  ) {
 	  %cache = (); 
 	  # %cache = ( trace => 'cleanup' );
 	   debug_print ( 1, "looks like our cache is clobbered with BS stuff - throw away.... \n" ) ;

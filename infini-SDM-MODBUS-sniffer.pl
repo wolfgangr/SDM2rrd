@@ -4,7 +4,7 @@
 # - sniff whats going on any way
 # - extract short total-power readings
 # - insert additional readings if system accepts so
-# - pass the responses to one or two messsage queues for further use
+# - pass the responses messsage queue for e.g rrd logger
 #
 # maybe in the future
 # - do something if primary master stops working
@@ -41,6 +41,13 @@ my $mq_mtype = 1;
 
 # the request of infini-MODBUS-card - used as sync starter
 my $startseq =  array2string(  map  hex, qw( 01 04   00 34  00 02  30 05)  );
+
+
+# parameter for limiting bus load
+my $interval = 15 ; # seconds between additional query runs
+my $interval_shift = 7 ; # seconds shift from even interval modulos
+my $inter_query_stepping = 4 ; # how many native qry occasions to skip befor inserting extra qry
+
 
 my $debug = 0; 
 
@@ -94,15 +101,23 @@ my $MQ  = IPC::Msg->new($our_ftok     ,  S_IWUSR | S_IRUSR |  IPC_CREAT )
 my$buf;
 # my $cnt;
 # while ( $cnt ) {
-my $starttime = gettimeofday * 1e3 ; 
-my $cnt;
+
+my $cnt; # rolling counter for debug purposes
 
 my $req_cnt = -1 ;     # index into our etra requests to round robin
+my $qry_pause_cnt =0;  # implement 
+my $starttime = gettimeofday * 1e3 ;  # for tagging 
+my $nextrun = Time::HiRes::time(); # inter-query counter independet of tagging
+
+
 my $ans_cnt = -1 ;  # state to keep track where we are in the line
+
+
 
 # for my $cnt ( 1.. 100 ) {
 while (1) {
 	$cnt++;
+
 	# printf  "-%02d = " , $cnt, ;
 	my $status = sysread $MODBUS, $buf, 1024 ;
 	my $rectime = gettimeofday * 1000 ;
@@ -148,7 +163,18 @@ while (1) {
 		if ($ans_cnt == 1) {
 			if ( ++$req_cnt > $#requests) { $req_cnt =0 } ;
 			# we have a SDM response, and will insert our multimaster query now
+			# ----- implement multimaster query timing
 
+			if ( --$qry_pause_cnt > 0) {
+
+				next;
+			} # else {
+				# 	
+				# }
+
+			$qry_pause_cnt = $inter_query_stepping ;
+
+			# ----- do the multimaster query
 			usleep ( 1e5 );
 			my $qry = $requests[$req_cnt ];
 			syswrite $MODBUS, $qry ;
