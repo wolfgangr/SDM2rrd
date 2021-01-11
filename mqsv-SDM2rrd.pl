@@ -20,7 +20,7 @@ use Cwd qw( realpath );
 use RRDs();
 
 
-our $Debug = 5;
+our $Debug = 2;
 
 # debug levels:
 # 1 - log abnormal data coming in on MQ
@@ -245,6 +245,8 @@ while (1) {
         	debug_print (2, " we hit a ptot case\n") ;
 
 		my $status = perform_rrd_update ( \%cache, $counter_tags[ 0 ] ,  [ $requests[0] ] ) ;
+
+		if ($status) { $pt_lastrun = $last_R  ; }
 	}
   }     
 
