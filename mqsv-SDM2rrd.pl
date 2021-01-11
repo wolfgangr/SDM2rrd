@@ -337,67 +337,6 @@ sub perform_rrd_update {
 }
 
 
-# check cache status and decide how to proceed
-
-# hang on, what's going on here???
-#  sdm_evaluate ( \%wayback, \%cache )  
-sub sdm_evaluate_THISMIGHTBEBULLSHITT  {
-  my ($wb, $ch) = @_ ;
-  # print Data::Dumper->Dump ( [ $wb, $ch] , [ qw(  *wb *ch ) ] );
-  print Data::Dumper->Dump ( [ $ch] , [ qw(  *ch ) ] );
-  # so we see
-  # - wb{ '01:04:00:ea:00:12:51:f3' }  -> { 'val_tags' } => [ .... 'U1', 'U2', ....
-  # ch{ ....
-  # - 'Q:0' => {'tag' => '01:04:00:34:00:02:30:05'   }
-  # - 'R:0' => { 'last' => '01610229676604'  },
-  #   'R:0:016i10229675545' => { 'data' => [ 1, 4, 4, 69, 52, 203, 112, 249, 146  ] },
-  #
-  #   ^([R|Q])\:(\d):(\d{14})$
-  #
-
-  
-  # for my $rtag ( sort grep { /^([R|Q])\:(\d):(\d{14})$/ } keys %{$ch} ) {
-  #	  $rtag =~ /^([R|Q])\:(\d):(\d{14})$/ ;
-  for my $rtag ( sort grep { /^R\:(\d)$/ } keys %{$ch} ) {
-	  $rtag =~ /^R\:(\d)$/ ;
-	  my $rspno = $1;
-	  printf  ("all=%s,  no=%d  \n",   $rtag, $rspno  ) ;
-	  my $lastrsp = $$ch{ 'R:'.$rspno }->{ 'last' };
-	  print "last: $lastrsp \n";
-	  my @data = @{$$ch{ 'R:'.$rspno.':'.$lastrsp }->{ data }} ;
-	 print join ( ', ', @data) , "\n" ; 
-	 # oops, this is still unprocessed modbus stuff
-
-	 my $qerytag = $$ch{ 'Q:'.$rspno }->{ tag };
-	 my @valuetags = @{$$wb{ $qerytag }->{ val_tags }};
-	print join ( ', ', @valuetags ) , "\n" ;
-	my @result = SDM_parse_response_ary( \@data, 1      );
-	print join ( '; ', @result ) , " - so what? \n" ;
- 
-  }
-  
-  die "debug in -------------- sub sdm_evaluate -----------";
-
-
-
-  my %kv = ();
-  for my $wbtag ( keys %{$wb} )  { 
-	print $wbtag, "\n" ;
-	my @valtags = @{$wb->{ $wbtag }->{ 'val_tags' } } ;
-	print join( ',', @valtags), "\n", ;
-
-  }
-
-
-  # what do we like as return? hash tag-> value?
-
-
-  #
-  #
-  die "debug in -------------- sub sdm_evaluate -----------";
-}
-
-
 
 # ----------- parse SDM Modbus response ---------------
 #
