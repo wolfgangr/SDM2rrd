@@ -3,12 +3,6 @@
 # companion to infini-SDM-MODBUS-sniffer.pl
 # reads the counter values from message queue and stores them into approriate rrds
 # 
-# boilerplating: 
-# OK - this started as a copy of mqsv-test-client.pl
-# OK - will then take the counter related config from infini-SDM-MODBUS-sniffer.pl
-# OK - and load in all the counter config from infini-SDM-precook.pl
-# OK - and resemble the data conversion towards rrd from USR-SDM-Poller.pl
-# TODO massive quest to tidy up and simplyfy
 #
 use strict;
 use warnings;
@@ -26,7 +20,7 @@ use Cwd qw( realpath );
 use RRDs();
 
 
-our $Debug = 3;
+our $Debug = 2;
 
 # debug levels:
 # 1 - log abnormal data coming in on MQ
@@ -234,7 +228,7 @@ while (1) {
   # not nice to hardcode this.... but KISS 
   if ( $cache{ 'R:0' } and $cache{ 'Q:0' } ) {
         # we have all we need - ptot, times , definitions
-        debug_print (3, " we hit a ptot case\n") ;
+        debug_print (2, " we hit a ptot case\n") ;
 	my $status = perform_rrd_update ( \%cache, $counter_tags[ 0 ] ) ;
     	
   } 
@@ -242,7 +236,7 @@ while (1) {
   # precheck: loop over indexes of requests , count the hits of R and Q labels, 
   # 	and if the the number is enough , we might have a complete data set
   if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (0 .. $#requests) ) ) >= scalar  @requests ) {
-	  debug_print (3,  " we hit a all other counter case\n") ;
+	  debug_print (2,  " we hit a all other counter case\n") ;
 	  # so we try a full size rrd update 
  
 	 # e.g what we know in our cache:
@@ -312,7 +306,7 @@ sub perform_rrd_update {
    }
    debug_print (5, Data::Dumper->Dump ( [ \%t_v ] , [ qw( *vt ) ] ) ) if ($Debug >= 5);
 
-   debug_print (3, "counter: $ct, rrds: ", join (',', @rrds) , "\n" );
+   debug_print (2, "counter: $ct, rrds: ", join (',', @rrds) , "\n" );
    for my $rrd_tag (@rrds) {
          my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
          my $rrd_template = join ( ':', @fields);
@@ -330,7 +324,7 @@ sub perform_rrd_update {
              debug_printf (1, "error updating RRD %s: %s \n", $rrdfile , RRDs::error ) ;
 	     return 0;
          } else {
-             debug_print(2, "rrd update succesful\n");
+             debug_printf (2, "rrd update succesful for %s\n" , $rrdfile);
          }
    }
    return 1;
@@ -339,10 +333,7 @@ sub perform_rrd_update {
 
 
 # ----------- parse SDM Modbus response ---------------
-#
 
-# TODO this really is a mess, but, sadly enough, it works ;-)
-#
 # parse SDM response,
 # @floats = SDM_parse_response ( \@response, $device_ID, $n_regs)
 sub SDM_parse_response_ary {
