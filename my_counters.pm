@@ -45,8 +45,7 @@ $Counterlist{'mains_d'} = {
         ID =>  1,
         Label => 'Hausanschluss Details',
         # direction => 1,
-	# selectors => [ [ 'Ptot' ] ] ,
-	# rrds => [ qw( totalP_hires )],
+	rrds    => [ qw( totalP E_bidir elbasics elquality )],
 };
 
 $Counterlist{'subs1'} = {
