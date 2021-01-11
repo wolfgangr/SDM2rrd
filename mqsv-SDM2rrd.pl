@@ -7,7 +7,8 @@
 # OK - this started as a copy of mqsv-test-client.pl
 # OK - will then take the counter related config from infini-SDM-MODBUS-sniffer.pl
 # OK - and load in all the counter config from infini-SDM-precook.pl
-# - and resemble the data conversion towards rrd from USR-SDM-Poller.pl
+# OK - and resemble the data conversion towards rrd from USR-SDM-Poller.pl
+# TODO massive quest to tidy up and simplyfy
 #
 use strict;
 use warnings;
@@ -180,7 +181,7 @@ while (1) {
 	my $rq_tlast = $cache{   $peer_q }->{ last } ;
 	my $dev_ID   = $wayback{ $rq_tag }->{ devID } ; 
 
-	debug_printf (5, "peer_q=%s, rq_tag=%s, rq_tlast=%s, dev_ID=%s, ", $peer_q, $rq_tag, $rq_tlast, -9999);
+	debug_printf (5, "adding R row - peer_q=%s, rq_tag=%s, rq_tlast=%s, dev_ID=%s, \n", $peer_q, $rq_tag, $rq_tlast, -9999);
 
 	if ( $rq_tlast and $rq_tlast == $starttime ) { # then we believe in a clean bus state
 		my $r_tag_time = sprintf("%1s:%1d:%014d", $mq_qa, $mq_rq , $starttime );
@@ -208,11 +209,17 @@ while (1) {
 	die " illegal data type token - hang on, how did I come here??? ";
   }
 
-  print Data::Dumper->Dump ( [ \%cache ] , [  qw ( *cache) ] );
+  ### print Data::Dumper->Dump ( [ \%cache ] , [  qw ( *cache) ] );
   # sleep ;
   $cnt++;
 
-  # what can we do?
+
+
+  # =========  what can we do?-------------------------------
+
+  print(map ( ( "\t- " . $_ . "\n"      ), (  sort keys ( %cache ))) )  ;
+
+
   # if 'R:0'->last ....  and 'Q:0'->tag=> ... process R:0:{time} -> data .... cleanup
   # if R:1 & R:2 & R:3 ... & ... data ... processs... otherstuff..... cleanup
   # if we have more than whatever (20 ?) records in %cache we may die
@@ -265,6 +272,7 @@ while (1) {
 	# TODO what ist to be done
 
   }
+  print "\n";
 }
 
 exit 1;
@@ -284,9 +292,9 @@ sub perform_rrd_update {
    foreach my $rspnum (0 .. $#requests) {
      my $lastrun = $$p_cache{ sprintf ("R:%s", $rspnum) }->{ last } ;
      return 0 unless defined $lastrun ;
-
+		# TODO check why lastrun might be undef
      my %rsph = %{$$p_cache{ sprintf ("R:%s:%014d", $rspnum, $lastrun) }} ;
-     print Data::Dumper->Dump ( [ \%rsph ] , [ qw( *rsph ) ] ) ;
+     ### print Data::Dumper->Dump ( [ \%rsph ] , [ qw( *rsph ) ] ) ;
 
      foreach  ( 0 ..  $#{$rsph{ val_tags}} ) {
 	     my $vtg = ${$rsph{ val_tags}}[ $_ ] ;
@@ -298,7 +306,7 @@ sub perform_rrd_update {
      }
 
    }
-   print Data::Dumper->Dump ( [ \%t_v ] , [ qw( *vt ) ] ) ;
+   # print Data::Dumper->Dump ( [ \%t_v ] , [ qw( *vt ) ] ) ;
 
    print "counter: $ct, rrds: ", join (',', @rrds) , "\n";
    for my $rrd_tag (@rrds) {
@@ -319,10 +327,10 @@ sub perform_rrd_update {
 	     return 0;
          } else {
              debug_print(4, "rrd update succesful\n");
-	     return 1;
+	     # return 1;
          }
    }
-   # return undef;
+   return 1;
 }
 
 
