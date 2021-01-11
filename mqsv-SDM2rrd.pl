@@ -278,25 +278,26 @@ while (1) {
 
 exit 1;
 
-# ===================== sub section ===================================================================
+# ===================== END of Main loop - subs below ===================================================================
 
 
 # $status = perform_rrd_update ( \%cache, $counter_tag )
 sub perform_rrd_update {
    my ($p_cache, $ct)  = @_ ;
 
-   # look up the rrd definitions
+   # look up the rrd definitions  
    my @rrds = @{$Counterlist{ $ct }->{ rrds }} ;
 
    # build an overall tag-> value hash
    my %t_v =();
    foreach my $rspnum (0 .. $#requests) {
+
      my $lastrun = $$p_cache{ sprintf ("R:%s", $rspnum) }->{ last } ;
      return 0 unless defined $lastrun ;
-		# TODO check why lastrun might be undef
      my $rsp_p = $$p_cache{ sprintf ("R:%s:%014d", $rspnum, $lastrun) } ;
      return 0 unless defined $rsp_p ; 
      my %rsph = %{$rsp_p} ;
+
      ### print Data::Dumper->Dump ( [ \%rsph ] , [ qw( *rsph ) ] ) ;
 
      foreach  ( 0 ..  $#{$rsph{ val_tags}} ) {
@@ -309,28 +310,27 @@ sub perform_rrd_update {
      }
 
    }
-   # print Data::Dumper->Dump ( [ \%t_v ] , [ qw( *vt ) ] ) ;
+   debug_print (5, Data::Dumper->Dump ( [ \%t_v ] , [ qw( *vt ) ] ) ) if ($Debug >= 5);
 
-   print "counter: $ct, rrds: ", join (',', @rrds) , "\n";
+   debug_print (3, "counter: $ct, rrds: ", join (',', @rrds) , "\n" );
    for my $rrd_tag (@rrds) {
          my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
          my $rrd_template = join ( ':', @fields);
 	 my $rrd_values = join ( ':', 'N', 
 		 map { ($t_v{ $_}  )  } @fields ) ;
 
-         print "tags: ", $rrd_template   , "\n";
-	 print "values: ", $rrd_values , "\n";
+         debug_print (3, "tags: ", $rrd_template   , "\n" );
+	 debug_print (3, "values: ", $rrd_values , "\n"   );
 
          my $rrdfile = sprintf $RRD_sprintf, $RRD_dir, $RRD_prefix, $ct, $rrd_tag;
-         print "rrd file: ", $rrdfile , "\n"; 
+         debug_print (3, "rrd file: ", $rrdfile , "\n" );
 
          RRDs::update($rrdfile, '--template', $rrd_template, $rrd_values);
          if ( RRDs::error ) {
-             debug_printf (2, "error updating RRD %s: %s \n", $rrdfile , RRDs::error ) ;
+             debug_printf (1, "error updating RRD %s: %s \n", $rrdfile , RRDs::error ) ;
 	     return 0;
          } else {
-             debug_print(4, "rrd update succesful\n");
-	     # return 1;
+             debug_print(2, "rrd update succesful\n");
          }
    }
    return 1;
