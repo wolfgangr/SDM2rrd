@@ -16,7 +16,7 @@ require ('./extract-SDM-def.pm');
 
 # two line test code and usage guide
 my ($SDM_regs , $SDM_reg_by_tag , $SDM_selectors)  =( read_csv_SDM_def ( $sdm_def_file ));
-# debug_dumper ( 3, $SDM_regs, $SDM_reg_by_tag , $SDM_selectors );
+debug_dumper ( 3, $SDM_regs, $SDM_reg_by_tag , $SDM_selectors );
 
 
 exit;

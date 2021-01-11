@@ -20,6 +20,7 @@ our @all_selectors;
 require ('./my_counters.pm');
 
 our %RRD_definitions ;
+our %SQL_export;
 require ('./rrd_def.pm');
 
 #debug_dumper (3, 
@@ -27,7 +28,9 @@ print Data::Dumper->Dump (
 	[ \@SDM_regs , \%SDM_reg_by_tag , \%SDM_selectors , \@all_selectors , \%Counterlist  ] ,
 	[ qw(*SDM_regs  *SDM_reg_by_tag   *SDM_selectors  *all_selectors       *Counterlist ) ]  );
 
-print Data::Dumper->Dump ( [ \%RRD_definitions ]  , [ qw(%RRD_definitions) ]  );
+print Data::Dumper->Dump ( [ \%RRD_definitions ]  , [ qw( *RRD_definitions) ]  );
+
+print Data::Dumper->Dump ( [ \%SQL_export  ]  , [ qw(  *SQL_export ) ]  );
 
 print " ===== rrd defs : " , join (' ' , keys %RRD_definitions ), " =====\n";
 
