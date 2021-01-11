@@ -239,16 +239,13 @@ while (1) {
     	
   } 
 
-  # this is a bit crude, assumes we have on ptot in $requests[0] and sth like 1..3 in the rest
-  # push perl at its PERLies ;-}
-  # loop over indexes of requests (but the first aka [0]) , count the hits of R and Q labels, 
-  # 	and if there are >= 6 we might have a complete data set
+  # precheck: loop over indexes of requests , count the hits of R and Q labels, 
+  # 	and if the the number is enough , we might have a complete data set
   if ( (scalar ( grep { ( $cache{ 'R:'.$_  } and $cache{ 'Q:'.$_ } ) } (0 .. $#requests) ) ) >= scalar  @requests ) {
-	  print " we hit a all other counter case\n";
-	  # TODO what ist to be done
+	  debug_print (3,  " we hit a all other counter case\n") ;
+	  # so we try a full size rrd update 
  
-	 # ~~~~~~~~~~~~~~~~~~~~~ BS per 2021-01-10 ? ~~~~~~~~~~~~~~~~~~~~~~~~~~+
-	 # what we know in our cache:
+	 # e.g what we know in our cache:
 	 #
 	 #    'R:0:01610307266184' => {
 	 #               'query_tag' => '01:04:00:34:00:02:30:05',
@@ -262,30 +259,21 @@ while (1) {
  	 my $status = perform_rrd_update ( \%cache, $counter_tags[1] ) ;
  	 if ($status) {
 		 # after successful update of all rrds we start with a fresh cache
-		 # %cache = ( trace => 'updated' );
 		 %cache = ();
 
 	 } else {
-		 debug_print ( 0, "all counter rrd update failed"); 
-		 # die "all counter rrd update failed";
-		 # TODO after testing, change this to proper logging
+		 debug_print ( 1, "all counter rrd update failed \n"); 
 	 }
-		  
-
-	#  die " ~~~~~~~~~~~~~~~ we hit a all other counter case ~~~~~~~~~~~~~~~~~~~~~~+" ;
-
   }
 
+  # cleanup cache and log in case of clobbered bus
+  # value of 20 works for hours in tests without trigger
   if (scalar keys %cache >20 ) {
-	  # cleanup and log in case of clobbered bus
-	  # value of 20 works for hours in tests without trigger
 	  %cache = (); 
 	  # %cache = ( trace => 'cleanup' );
-	  die "looks like our cache is clobbered with BS stuff .... ";
-	# TODO change this back to proper logging
+	   debug_print ( 1, "looks like our cache is clobbered with BS stuff - throw away.... \n" ) ;
 
   }
-  print "\n";
 }
 
 exit 1;
