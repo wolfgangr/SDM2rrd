@@ -284,10 +284,13 @@ sub perform_rrd_update {
 
    # build an overall tag-> value hash
    my %t_v =();
+   my $rrd_timestamp;
    foreach my $rspnum (0 .. $#requests) {
 
      my $lastrun = $$p_cache{ sprintf ("R:%s", $rspnum) }->{ last } ;
      return 0 unless defined $lastrun ;
+     $rrd_timestamp = floor ($lastrun / 1000); # rrd wants epoc in sec, we have ms
+
      my $rsp_p = $$p_cache{ sprintf ("R:%s:%014d", $rspnum, $lastrun) } ;
      return 0 unless defined $rsp_p ; 
      my %rsph = %{$rsp_p} ;
@@ -310,7 +313,7 @@ sub perform_rrd_update {
    for my $rrd_tag (@rrds) {
          my @fields =  @{$RRD_definitions{ $rrd_tag   }->{ fields } };
          my $rrd_template = join ( ':', @fields);
-	 my $rrd_values = join ( ':', 'N', 
+	 my $rrd_values = join ( ':', $rrd_timestamp, 
 		 map { ($t_v{ $_}  )  } @fields ) ;
 
          debug_print (3, "tags: ", $rrd_template   , "\n" );
