@@ -20,7 +20,7 @@ use Cwd qw( realpath );
 use RRDs();
 
 
-our $Debug = 2;
+our $Debug = 1;
 
 # debug levels:
 # 1 - log abnormal data coming in on MQ
@@ -231,17 +231,11 @@ while (1) {
   debug_print( 4 , map ( ( "\t- " . $_ . "\n"      ), (  sort keys ( %cache ))) ) if ( $Debug >= 4)    ;
 
 
-  # not nice to hardcode this.... but KISS 
-  #   01:04:00:34:00:02:30:05
-
   # state $Q_lastrun ;
   my $last_R = $cache{ 'R:0' }->{ last };
   if ( defined ($last_R)  and $last_R != $pt_lastrun   ) {
 	my $r0_timed = $cache{ sprintf ("R:0:%014d", $last_R) } ;
         	if ( (defined $r0_timed) and ( defined ( my $sdm_vals = $r0_timed->{ SDMvalues } )) ) {  	
-			#	my $P_tot = $$sdm_vals[ 0 ] ;
-			# print "\tvalue:",  $P_tot, "\n" ;
-        		# we have all we need - ptot, times , definitions
         	debug_print (2, " we hit a ptot case\n") ;
 
 		my $status = perform_rrd_update ( \%cache, $counter_tags[ 0 ] ,  [ $requests[0] ] ) ;
