@@ -153,7 +153,7 @@ my $MQ  = IPC::Msg->new($our_ftok     ,    S_IRUSR | S_IWUSR |  IPC_CREAT   )
 print " --- message queue open --- \n";
 
 my $cnt =1;
-my %cache=();
+my %cache= ( trace => 'start' ); # don't trap into undef'd hash pointers
 while (1) {
 
   my $buf;
@@ -169,12 +169,15 @@ while (1) {
   # print "back-test  ",  , "\n"; 
   # print Data::Dumper->Dump ( [ \@datary ] , [ qw( *datary) ]  );
 
+  # register any response no matter whether valid
   $cache{ sprintf("%1s:%1d", $mq_qa, $mq_rq)  } = { last => $starttime,  foo => 'bar'};
+
   if ($mq_qa eq 'Q')  {
 	  # when everything is OK, the label always will be overrwritten
-	  # when we have garbage on the bus, BS may occur
+	  # when we have garbage on the bus, BS may accumulate
 	  my $q_tag = sprintf("%1s:%1d", $mq_qa, $mq_rq  );
 	  $cache{ $q_tag }->{ tag}  =  $data_hr  ; # ,  substr($data_hr, 0, 2)
+
   } elsif ($mq_qa eq 'R')   {
 	my $peer_q = sprintf("Q:%1d",  $mq_rq  );  
 	my $rq_tag   = $cache{   $peer_q }->{ tag } ;
@@ -261,7 +264,16 @@ while (1) {
 	 #
 
  	 my $status = perform_rrd_update ( \%cache, $counter_tags[1] ) ;
-  
+ 	 if ($status) {
+		 # after successful update of all rrds we start with a fresh cache
+		 %cache = ( trace => 'updated' );
+
+	 } else {
+		 debug_print ( 0, "all counter rrd update failed"); 
+		 # die "all counter rrd update failed";
+		 # TODO after testing, change this to proper logging
+	 }
+		  
 
 	#  die " ~~~~~~~~~~~~~~~ we hit a all other counter case ~~~~~~~~~~~~~~~~~~~~~~+" ;
 
@@ -269,9 +281,9 @@ while (1) {
 
   if (scalar keys %cache >20 ) {
 	  # crude cleanup
-	  %cache = ();
-	# die "looks like our cache is clobbered with BS stuff .... ";
-	# TODO what ist to be done
+	  %cache = ( trace => 'cleanup' );
+	  die "looks like our cache is clobbered with BS stuff .... ";
+	# TODO change this back to proper logging
 
   }
   print "\n";
@@ -295,7 +307,9 @@ sub perform_rrd_update {
      my $lastrun = $$p_cache{ sprintf ("R:%s", $rspnum) }->{ last } ;
      return 0 unless defined $lastrun ;
 		# TODO check why lastrun might be undef
-     my %rsph = %{$$p_cache{ sprintf ("R:%s:%014d", $rspnum, $lastrun) }} ;
+     my $rsp_p = $$p_cache{ sprintf ("R:%s:%014d", $rspnum, $lastrun) } ;
+     return 0 unless defined $rsp_p ; 
+     my %rsph = %{$rsp_p} ;
      ### print Data::Dumper->Dump ( [ \%rsph ] , [ qw( *rsph ) ] ) ;
 
      foreach  ( 0 ..  $#{$rsph{ val_tags}} ) {
