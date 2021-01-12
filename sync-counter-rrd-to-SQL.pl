@@ -110,7 +110,7 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $csv_file ;
 	       print  "\t",  $cmd_mysqlimport , "\n";
 	       system ($cmd_mysqlimport);
-	       die "========= DEBUG ==============";
+	       # die "========= DEBUG ==============";
 	}
 }
 
