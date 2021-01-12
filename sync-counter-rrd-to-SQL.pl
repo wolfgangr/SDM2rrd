@@ -8,9 +8,14 @@ use warnings;
 use strict;
 use Data::Dumper;
 
+
+
 # "%s/%s_%s_%s.rrd"; 
 our ( $RRD_dir , $RRD_prefix , $RRD_sprintf );
 require ('./rrd_def.pm');
+
+my $csv_sprintf = $RRD_sprintf ;
+$csv_sprintf =~ s/\.rrd$/.csv/ ;
 
 
 
@@ -46,6 +51,11 @@ print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]  
 # rrdfile = ...
 # tmpfile = ....
 # ./rrd2csv.pl $RRDFILE $CF -r 300 -x\; -M -t -f $TEMPFILE
+
+# sprintf template, vars:  
+# 	$rrd_file, CF aka 'AVERAGE', $starttime, $csv_file
+my $cmd_rrd2csv = './rrd2csv.pl %s %s  -eN -s%s -r 300 -a -x\; -M -t -f %s'; 
+
 #
 #   	mysqlimport -h $HOST -u $USER -p$PASSWD  --local \
 #		--ignore --force \
@@ -55,8 +65,8 @@ print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]  
 
 my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found";
 
-my $csv_sprintf = $RRD_sprintf ;
-$csv_sprintf =~ s/\.rrd$/.csv/ ;
+# my $csv_sprintf = $RRD_sprintf ;
+# $csv_sprintf =~ s/\.rrd$/.csv/ ;
 
 for my $counter_tag ( sort keys %sql_tables ) {
 	my $table_list_p = $sql_tables{ $counter_tag } or next ;
