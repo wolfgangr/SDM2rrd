@@ -28,13 +28,13 @@ my $sql_tables_dump = `./test-SQL-def.pl 2> /dev/null`;
 
 
 eval ($sql_tables_dump );
-print STDERR $@ ; # eval error message
-print STDERR Data::Dumper->Dump ( [ \%sql_tables , \%SQL_export] , [ qw (  *sql_tables *SQL_export ) ]  ) ;
+# print STDERR $@ ; # eval error message
+# print STDERR Data::Dumper->Dump ( [ \%sql_tables , \%SQL_export] , [ qw (  *sql_tables *SQL_export ) ]  ) ;
 
 
 # try to undestand shell style config
 my $secret_pwd = `cat secret.pwd`;
-print STDERR $secret_pwd ;
+# print STDERR $secret_pwd ;
 
 # crude shell variable syntax parser
 my %credentials;
@@ -45,7 +45,7 @@ for ( split '\n' , $secret_pwd ) {
 	$credentials{ $tag } = $val ;
 }
 
-print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]   );
+# print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]   );
 
 # die "------- d e b u g -----";
 
@@ -104,7 +104,7 @@ for my $counter_tag ( sort keys %sql_tables ) {
 
 		my $col_list_p = $$table_list_p{ $table_tag } or die "column list not configured for $table_tag " ;
 		my @db_columns = @$col_list_p ;
-		print STDERR "  want cols: ", join ( ', ', @db_columns) , "\n" ;
+		# print STDERR "  want cols: ", join ( ', ', @db_columns) , "\n" ;
 
 		# my $cmd_rrd_h = sprintf $tpl_rrd_cols, 
 		# my $rrd_header = 
@@ -113,20 +113,20 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		my $rrd_file = sprintf $RRD_sprintf,  $RRD_dir , $RRD_prefix , $counter_tag, $table_tag ;
 		my $csv_file = sprintf $csv_sprintf,  $tmpdir  , $RRD_prefix , $counter_tag, $table_tag ;
 
-		printf STDERR "... building column index for %s .... \n" , $rrd_file;
+		# printf STDERR "... building column index for %s .... \n" , $rrd_file;
 		my $cmd_rrd_h = sprintf $tpl_rrd_cols, $rrd_file  ;
-		print  STDERR "\t", $cmd_rrd_h, , "\n";
+		# print  STDERR "\t", $cmd_rrd_h, , "\n";
 
 		my $rrd_header = `$cmd_rrd_h`;
 		my @rrd_columns = split (  ' '    ,   $rrd_header  ) ;
 		unless ( scalar @rrd_columns ) { die "cannot retrieve column tags from $rrd_file " ; }
-		print STDERR "  have cols: ", join ( ', ', @rrd_columns) , "\n" ;
+		# print STDERR "  have cols: ", join ( ', ', @rrd_columns) , "\n" ;
 
 		# build reverse column index
 		my %idx_c ;
 		for my $i (0 .. $#rrd_columns)  { $idx_c{ $rrd_columns[ $i ] } = $i  ; }
 			
-		print STDERR Data::Dumper->Dump ( [ \%idx_c ] ,  [ qw( *idx_c ) ] ) ;
+		# print STDERR Data::Dumper->Dump ( [ \%idx_c ] ,  [ qw( *idx_c ) ] ) ;
 
 		# now build a header and a col selection phrase
 
@@ -141,24 +141,25 @@ for my $counter_tag ( sort keys %sql_tables ) {
 			# $sql_cols .= ', `' . $c . '`' ;
 			$sql_cols .= ',' . $c  ;
 		}
+		
 		# append timstamp column so this recieves an empty value and does its update 
 		# TODO this is hardcoded but table format - better configurable?
 		$sql_cols .= ',' . 'update_time' ;  
-		printf STDERR "cmd_cut= >%s< \n", $cmd_cut ;
+		# printf STDERR "cmd_cut= >%s< \n", $cmd_cut ;
 
-	# ~~~~~~~~~~~~~ SQL: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		# ~~~~~~~~~~~~~ SQL: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
 		
 
 		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf  ;
 		$cmd_rrd2scv .= $cmd_cut . ' > ' . $csv_file ;
-		print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
+		# print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
 		system ($cmd_rrd2scv);
 
 		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $sql_cols, $csv_file ;
-	       print  STDERR "\t",  $cmd_mysqlimport , "\n";
-	       system ($cmd_mysqlimport);
-	       # die "========= DEBUG ==============";
+		# print  STDERR "\t",  $cmd_mysqlimport , "\n";
+	        system ($cmd_mysqlimport);
+	        # die "========= DEBUG ==============";
 	}
 }
 
