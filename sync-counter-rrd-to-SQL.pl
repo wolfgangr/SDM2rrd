@@ -122,10 +122,30 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		unless ( scalar @rrd_columns ) { die "cannot retrieve column tags from $rrd_file " ; }
 		print STDERR "  have cols: ", join ( ', ', @rrd_columns) , "\n" ;
 
-		# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		# build reverse column index
+		my %idx_c ;
+		for my $i (0 .. $#rrd_columns)  { $idx_c{ $rrd_columns[ $i ] } = $i ; }
+			
+		print STDERR Data::Dumper->Dump ( [ \%idx_c ] ,  [ qw( *idx_c ) ] ) ;
+
+		# now build a header and a col selection phrase
+
+		# | cut -d\; -f1,2,3,4  first column is 1, and for datetime
+		my $cmd_cut = ' | cut -d\; -f1';
+
+		# TODO: mysql import header
+
+		for my $c ( @db_columns ) {
+			$cmd_cut .= ',' . $idx_c{ $c } ;
+		}
+		printf STDERR "cmd_cut= >%s< \n", $cmd_cut ;
+
+	# ~~~~~~~~~~~~~ SQL: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
+		
 
 		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf , $csv_file ;
+		$cmd_rrd2scv .= $cmd_cut ;
 		print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
 		# system ($cmd_rrd2scv);
 
