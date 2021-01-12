@@ -1,5 +1,6 @@
 *.swp
 rrd/*
+tmp/*
 test
 rrd_old/*
 rrd2csv.pl

@@ -20,8 +20,8 @@ my %sql_tables;
 my $sql_tables_dump = `./test-SQL-def.pl 2> /dev/null`;
 
 eval ($sql_tables_dump );
-print $@ ; # eval error message
-print Dumper ( \%sql_tables ) ;
+print STDERR $@ ; # eval error message
+print STDERR Dumper ( \%sql_tables ) ;
 
 # database chunks - basically copy over from infini
 
