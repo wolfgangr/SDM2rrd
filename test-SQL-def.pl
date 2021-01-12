@@ -9,6 +9,8 @@ use warnings;
 use strict;
 use Data::Dumper  qw(Dumper);
 # use Data::Dumper::Simple :
+use Data::Serializer;
+
 
 our $Debug = 3;
 
@@ -83,7 +85,19 @@ for my $c_tag ( sort keys %Counterlist ) {
 
 print STDERR Data::Dumper->Dump ( [  \%sql_tables  ]  , [ qw( *sql_tables    ) ]  );
 # out goodie for the consumer at STDOUT, if any:
-print STDOUT Data::Dumper->Dump ( [  \%sql_tables  ]  , [ qw( *sql_tables    ) ]  );
+
+{
+	local $Data::Dumper::Purity = 1;
+	local $Data::Dumper::Deepcopy = 1;
+	# local $Data::Dumper::Terse = 1;
+	# local $Data::Dumper::Indent =0;
+	print STDOUT Data::Dumper->Dump ( [  \%sql_tables  ]  , [ qw( *sql_tables    ) ]  );
+}
+
+# my $serializer = Data::Serializer->new();
+# print STDOUT $serializer->serialize({%sql_tables});
+
+
 
 # instruction for use
 

@@ -5,3 +5,4 @@ rrd_old/*
 rrd2csv.pl
 rrdtest.pl
 message_queue.kilroy
+secret.pwd
