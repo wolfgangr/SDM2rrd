@@ -21,8 +21,20 @@ my $sql_tables_dump = `./test-SQL-def.pl 2> /dev/null`;
 
 eval ($sql_tables_dump );
 print STDERR $@ ; # eval error message
-print STDERR Dumper ( \%sql_tables ) ;
+print STDERR Data::Dumper->Dump ( [ \%sql_tables ] , [ qw (  *sql_tables  ) ]  ) ;
 
 
+# try to undestand shell style config
+my $secret_pwd = `cat secret.pwd`;
+print $secret_pwd ;
 
+# crude shell variable syntax parser
+my %credentials;
+for ( split '\n' , $secret_pwd ) {
+	next if /^#/ ; # skip comment lines
+	my ($tag, $val) = split '=' , $_, 2;
+	$val =~ s/"?([^"]*)?"/$1/ ;  # strip quotes
+	$credentials{ $tag } = $val ;
+}
 
+print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]   );
