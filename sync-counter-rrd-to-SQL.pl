@@ -83,7 +83,7 @@ my  $DB = $credentials{ DB  } or die " no DB found in secret.pwd";
 
 my $tpl_mysqlimport = "mysqlimport -h $HOST -u $USER -p$PASSWD ";
 $tpl_mysqlimport .= "--local --ignore --force --ignore-lines=1 --fields-terminated-by=';' ";
-$tpl_mysqlimport .= " $DB %s ";
+$tpl_mysqlimport .= " %s $DB %s ";
 
 
 my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found in secret.pwd";
@@ -124,7 +124,7 @@ for my $counter_tag ( sort keys %sql_tables ) {
 
 		# build reverse column index
 		my %idx_c ;
-		for my $i (0 .. $#rrd_columns)  { $idx_c{ $rrd_columns[ $i ] } = $i ; }
+		for my $i (0 .. $#rrd_columns)  { $idx_c{ $rrd_columns[ $i ] } = $i  ; }
 			
 		print STDERR Data::Dumper->Dump ( [ \%idx_c ] ,  [ qw( *idx_c ) ] ) ;
 
@@ -134,9 +134,11 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		my $cmd_cut = ' | cut -d\; -f1';
 
 		# TODO: mysql import header
+		my $sql_cols = ' --columns=`time`';
 
 		for my $c ( @db_columns ) {
-			$cmd_cut .= ',' . $idx_c{ $c } ;
+			$cmd_cut .= ',' . ( $idx_c{ $c } + 2 )  ;
+			$sql_cols .= ', `' . $c . '`' ;
 		}
 		printf STDERR "cmd_cut= >%s< \n", $cmd_cut ;
 
@@ -149,7 +151,7 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
 		# system ($cmd_rrd2scv);
 
-		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $csv_file ;
+		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $sql_cols, $csv_file ;
 	       print  STDERR "\t",  $cmd_mysqlimport , "\n";
 	       # system ($cmd_mysqlimport);
 	       die "========= DEBUG ==============";
