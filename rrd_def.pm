@@ -120,7 +120,9 @@ foreach my $rrd_def  ( values %RRD_definitions) {
 
 
 # SQL database export selection
-
+# TODO on partial export, always the leading fields are used!!
+# this works by accident in current config, but may trap us if changed!
+# would need a mapping fields -> colums in SQL-update machine
 our %SQL_export = (
 	elbasics => { CF => 'AVERAGE' , fields     => [ qw ( P1 P2 P3 ) ] } ,
 	E_unidir => { CF => 'LAST'    , any   => 1 } ,

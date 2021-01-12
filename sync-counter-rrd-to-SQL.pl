@@ -47,6 +47,7 @@ for ( split '\n' , $secret_pwd ) {
 
 print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]   );
 
+# die "------- d e b u g -----";
 
 # for each rrd
 # rrdfile = ...
@@ -107,11 +108,11 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
 
 		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf , $csv_file ;
-		print  "\t",  $cmd_rrd2scv , "\n"; 
+		print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
 	       system ($cmd_rrd2scv);
 
 		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $csv_file ;
-	       print  "\t",  $cmd_mysqlimport , "\n";
+	       print  STDERR "\t",  $cmd_mysqlimport , "\n";
 	       system ($cmd_mysqlimport);
 	       # die "========= DEBUG ==============";
 	       # TODO : for selected subfields, we better should consider
