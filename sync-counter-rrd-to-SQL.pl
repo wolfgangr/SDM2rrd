@@ -12,6 +12,7 @@ use Data::Dumper;
 
 # "%s/%s_%s_%s.rrd"; 
 our ( $RRD_dir , $RRD_prefix , $RRD_sprintf );
+our %SQL_export ;
 require ('./rrd_def.pm');
 
 my $csv_sprintf = $RRD_sprintf ;
@@ -28,7 +29,7 @@ my $sql_tables_dump = `./test-SQL-def.pl 2> /dev/null`;
 
 eval ($sql_tables_dump );
 print STDERR $@ ; # eval error message
-print STDERR Data::Dumper->Dump ( [ \%sql_tables ] , [ qw (  *sql_tables  ) ]  ) ;
+print STDERR Data::Dumper->Dump ( [ \%sql_tables , \%SQL_export] , [ qw (  *sql_tables *SQL_export ) ]  ) ;
 
 
 # try to undestand shell style config
@@ -85,10 +86,10 @@ $tpl_mysqlimport .= " $DB %s ";
 
 
 my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found in secret.pwd";
-my $CF = $credentials{ CF } or die " no temp dir found in secret.pwd";
+# my $CF = $credentials{ CF } or die " no temp dir found in secret.pwd";
 my $start = $credentials{ START } or die " no start dir found in secret.pwd";
 
-my $tpl_rrd2csv = "./rrd2csv.pl %s $CF  -eN -s$start -r 300 -a -x\\; -M -t -f %s";
+my $tpl_rrd2csv = "./rrd2csv.pl %s %s  -eN -s$start -r 300 -a -x\\; -M -t -f %s";
 
 
 # my $csv_sprintf = $RRD_sprintf ;
@@ -97,13 +98,15 @@ my $tpl_rrd2csv = "./rrd2csv.pl %s $CF  -eN -s$start -r 300 -a -x\\; -M -t -f %s
 for my $counter_tag ( sort keys %sql_tables ) {
 	my $table_list_p = $sql_tables{ $counter_tag } or next ;
 	for my $table_tag ( sort keys %$table_list_p ) {
+		
+		my $cf = $SQL_export{ $table_tag }->{ CF } or die "CF not configured for $table_tag " ; 
 
 		# my $tablename = sprintf "%s_%s_%s", $RRD_prefix , $counter_tag, $table_tag ;
 		my $rrd_file = sprintf $RRD_sprintf,  $RRD_dir , $RRD_prefix , $counter_tag, $table_tag ;
 		my $csv_file = sprintf $csv_sprintf,  $tmpdir  , $RRD_prefix , $counter_tag, $table_tag ;
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
 
-		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file,  $csv_file ;
+		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf , $csv_file ;
 		print  "\t",  $cmd_rrd2scv , "\n"; 
 	       system ($cmd_rrd2scv);
 
@@ -111,6 +114,9 @@ for my $counter_tag ( sort keys %sql_tables ) {
 	       print  "\t",  $cmd_mysqlimport , "\n";
 	       system ($cmd_mysqlimport);
 	       # die "========= DEBUG ==============";
+	       # TODO : for selected subfields, we better should consider
+	       # at the moment I think it simply takes the first and drops the tail
+	       # which works nice by accident at current config
 	}
 }
 

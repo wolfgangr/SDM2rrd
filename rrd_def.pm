@@ -122,10 +122,10 @@ foreach my $rrd_def  ( values %RRD_definitions) {
 # SQL database export selection
 
 our %SQL_export = (
-	elbasics => { fields     => [ qw ( P1 P2 P3 ) ] } ,
-	E_unidir => { any   => 1 } ,
-	E_bidir  => { any   => 1 } ,
-	totalP   => { fields     => [ qw ( Ptot ) ] } ,
+	elbasics => { CF => 'AVERAGE' , fields     => [ qw ( P1 P2 P3 ) ] } ,
+	E_unidir => { CF => 'LAST'    , any   => 1 } ,
+	E_bidir  => { CF => 'LAST'    , any   => 1 } ,
+	totalP   => { CF => 'AVERAGE' , fields     => [ qw ( Ptot ) ] } ,
 
 ) ;
 
