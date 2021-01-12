@@ -54,7 +54,7 @@ print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]  
 
 # sprintf template, vars:  
 # 	$rrd_file, CF aka 'AVERAGE', $starttime, $csv_file
-my $cmd_rrd2csv = './rrd2csv.pl %s %s  -eN -s%s -r 300 -a -x\; -M -t -f %s'; 
+my $tpl_rrd2csv = './rrd2csv.pl %s %s  -eN -s%s -r 300 -a -x\; -M -t -f %s'; 
 
 #
 #   	mysqlimport -h $HOST -u $USER -p$PASSWD  --local \
@@ -63,7 +63,11 @@ my $cmd_rrd2csv = './rrd2csv.pl %s %s  -eN -s%s -r 300 -a -x\; -M -t -f %s';
 #		$DB $TEMPFILE
 #
 
-my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found";
+my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found in secret.pwd";
+my $CF = $credentials{ CF } or die " no temp dir found in secret.pwd";
+my $start = $credentials{ START } or die " no start dir found in secret.pwd";
+
+
 
 # my $csv_sprintf = $RRD_sprintf ;
 # $csv_sprintf =~ s/\.rrd$/.csv/ ;
@@ -76,6 +80,9 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		my $rrd_file = sprintf $RRD_sprintf,  $RRD_dir , $RRD_prefix , $counter_tag, $table_tag ;
 		my $csv_file = sprintf $csv_sprintf,  $tmpdir  , $RRD_prefix , $counter_tag, $table_tag ;
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
+
+		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $CF ,  $start, $csv_file ;
+		print  "\t",  $cmd_rrd2scv , "\n";  
 
 	}
 }
