@@ -91,7 +91,7 @@ my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found in secret.pwd";
 my $start = $credentials{ START } or die " no start dir found in secret.pwd";
 
 my $tpl_rrd2csv = "./rrd2csv.pl %s %s  -eN -s$start -r 300 -a -x\\; -M -t -f %s";
-
+my $tpl_rrd_cols = "rrdtool lastupdate %s | head -n1 ";
 
 # my $csv_sprintf = $RRD_sprintf ;
 # $csv_sprintf =~ s/\.rrd$/.csv/ ;
@@ -102,19 +102,37 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		
 		my $cf = $SQL_export{ $table_tag }->{ CF } or die "CF not configured for $table_tag " ; 
 
+		my $col_list_p = $$table_list_p{ $table_tag } or die "column list not configured for $table_tag " ;
+		my @db_columns = @$col_list_p ;
+		print STDERR "  want cols: ", join ( ', ', @db_columns) , "\n" ;
+
+		# my $cmd_rrd_h = sprintf $tpl_rrd_cols, 
+		# my $rrd_header = 
+
 		# my $tablename = sprintf "%s_%s_%s", $RRD_prefix , $counter_tag, $table_tag ;
 		my $rrd_file = sprintf $RRD_sprintf,  $RRD_dir , $RRD_prefix , $counter_tag, $table_tag ;
 		my $csv_file = sprintf $csv_sprintf,  $tmpdir  , $RRD_prefix , $counter_tag, $table_tag ;
+
+		printf STDERR "... building column index for %s .... \n" , $rrd_file;
+		my $cmd_rrd_h = sprintf $tpl_rrd_cols, $rrd_file  ;
+		print  STDERR "\t", $cmd_rrd_h, , "\n";
+
+		my $rrd_header = `$cmd_rrd_h`;
+		my @rrd_columns = split (  ' '    ,   $rrd_header  ) ;
+		unless ( scalar @rrd_columns ) { die "cannot retrieve column tags from $rrd_file " ; }
+		print STDERR "  have cols: ", join ( ', ', @rrd_columns) , "\n" ;
+
+		# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
 
 		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf , $csv_file ;
 		print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
-	       system ($cmd_rrd2scv);
+		# system ($cmd_rrd2scv);
 
 		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $csv_file ;
 	       print  STDERR "\t",  $cmd_mysqlimport , "\n";
-	       system ($cmd_mysqlimport);
-	       # die "========= DEBUG ==============";
+	       # system ($cmd_mysqlimport);
+	       die "========= DEBUG ==============";
 	       # TODO : for selected subfields, we better should consider
 	       # at the moment I think it simply takes the first and drops the tail
 	       # which works nice by accident at current config
