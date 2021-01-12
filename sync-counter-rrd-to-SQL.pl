@@ -13,11 +13,13 @@ our ( $RRD_dir , $RRD_prefix , $RRD_sprintf );
 require ('./rrd_def.pm');
 
 
+
 #  import database strucutre - we may run this on console to debug
 #  tag tree of  %sql_tables->{counter}->{rrd}->{field}
 #
 my %sql_tables;
 my $sql_tables_dump = `./test-SQL-def.pl 2> /dev/null`;
+
 
 eval ($sql_tables_dump );
 print STDERR $@ ; # eval error message
@@ -26,7 +28,7 @@ print STDERR Data::Dumper->Dump ( [ \%sql_tables ] , [ qw (  *sql_tables  ) ]  )
 
 # try to undestand shell style config
 my $secret_pwd = `cat secret.pwd`;
-print $secret_pwd ;
+print STDERR $secret_pwd ;
 
 # crude shell variable syntax parser
 my %credentials;
@@ -38,3 +40,33 @@ for ( split '\n' , $secret_pwd ) {
 }
 
 print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]   );
+
+
+# for each rrd
+# rrdfile = ...
+# tmpfile = ....
+# ./rrd2csv.pl $RRDFILE $CF -r 300 -x\; -M -t -f $TEMPFILE
+#
+#   	mysqlimport -h $HOST -u $USER -p$PASSWD  --local \
+#		--ignore --force \
+#		--ignore-lines=1 --fields-terminated-by=';' \
+#		$DB $TEMPFILE
+#
+
+my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found";
+
+my $csv_sprintf = $RRD_sprintf ;
+$csv_sprintf =~ s/\.rrd$/.csv/ ;
+
+for my $counter_tag ( sort keys %sql_tables ) {
+	my $table_list_p = $sql_tables{ $counter_tag } or next ;
+	for my $table_tag ( sort keys %$table_list_p ) {
+
+		# my $tablename = sprintf "%s_%s_%s", $RRD_prefix , $counter_tag, $table_tag ;
+		my $rrd_file = sprintf $RRD_sprintf,  $RRD_dir , $RRD_prefix , $counter_tag, $table_tag ;
+		my $csv_file = sprintf $csv_sprintf,  $tmpdir  , $RRD_prefix , $counter_tag, $table_tag ;
+		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
+
+	}
+}
+
