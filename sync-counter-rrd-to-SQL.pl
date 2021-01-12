@@ -134,11 +134,12 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		my $cmd_cut = ' | cut -d\; -f1';
 
 		# TODO: mysql import header
-		my $sql_cols = ' --columns=`time`';
+		my $sql_cols = ' --columns=time';
 
 		for my $c ( @db_columns ) {
 			$cmd_cut .= ',' . ( $idx_c{ $c } + 2 )  ;
-			$sql_cols .= ', `' . $c . '`' ;
+			# $sql_cols .= ', `' . $c . '`' ;
+			$sql_cols .= ',' . $c  ;
 		}
 		printf STDERR "cmd_cut= >%s< \n", $cmd_cut ;
 
@@ -149,12 +150,12 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf , $csv_file ;
 		$cmd_rrd2scv .= $cmd_cut ;
 		print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
-		# system ($cmd_rrd2scv);
+		system ($cmd_rrd2scv);
 
 		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $sql_cols, $csv_file ;
 	       print  STDERR "\t",  $cmd_mysqlimport , "\n";
-	       # system ($cmd_mysqlimport);
-	       die "========= DEBUG ==============";
+	       system ($cmd_mysqlimport);
+	       # die "========= DEBUG ==============";
 	       # TODO : for selected subfields, we better should consider
 	       # at the moment I think it simply takes the first and drops the tail
 	       # which works nice by accident at current config
