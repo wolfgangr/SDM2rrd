@@ -90,7 +90,7 @@ my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found in secret.pwd";
 # my $CF = $credentials{ CF } or die " no temp dir found in secret.pwd";
 my $start = $credentials{ START } or die " no start dir found in secret.pwd";
 
-my $tpl_rrd2csv = "./rrd2csv.pl %s %s  -eN -s$start -r 300 -a -x\\; -M -t -f %s";
+my $tpl_rrd2csv = "./rrd2csv.pl %s %s  -eN -s$start -r 300 -a -x\\; -M -t ";
 my $tpl_rrd_cols = "rrdtool lastupdate %s | head -n1 ";
 
 # my $csv_sprintf = $RRD_sprintf ;
@@ -133,7 +133,7 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		# | cut -d\; -f1,2,3,4  first column is 1, and for datetime
 		my $cmd_cut = ' | cut -d\; -f1';
 
-		# TODO: mysql import header
+		#  mysql import header
 		my $sql_cols = ' --columns=time';
 
 		for my $c ( @db_columns ) {
@@ -141,14 +141,17 @@ for my $counter_tag ( sort keys %sql_tables ) {
 			# $sql_cols .= ', `' . $c . '`' ;
 			$sql_cols .= ',' . $c  ;
 		}
+		# append timstamp column so this recieves an empty value and does its update 
+		# TODO this is hardcoded but table format - better configurable?
+		$sql_cols .= ',' . 'update_time' ;  
 		printf STDERR "cmd_cut= >%s< \n", $cmd_cut ;
 
 	# ~~~~~~~~~~~~~ SQL: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
 		
 
-		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf , $csv_file ;
-		$cmd_rrd2scv .= $cmd_cut ;
+		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $cf  ;
+		$cmd_rrd2scv .= $cmd_cut . ' > ' . $csv_file ;
 		print  STDERR "\t",  $cmd_rrd2scv , "\n"; 
 		system ($cmd_rrd2scv);
 
@@ -156,9 +159,6 @@ for my $counter_tag ( sort keys %sql_tables ) {
 	       print  STDERR "\t",  $cmd_mysqlimport , "\n";
 	       system ($cmd_mysqlimport);
 	       # die "========= DEBUG ==============";
-	       # TODO : for selected subfields, we better should consider
-	       # at the moment I think it simply takes the first and drops the tail
-	       # which works nice by accident at current config
 	}
 }
 
