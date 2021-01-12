@@ -29,37 +29,27 @@ my $MQ  = IPC::Msg->new($our_ftok , 0      )
 
 my $stat = $MQ->stat ;
 
-print Data::Dumper->Dump ( [ \$our_ftok, \$MQ,  \$stat ] , [ qw( *our_ftok *MQ  *stat) ] );
+# print Data::Dumper->Dump ( [ \$our_ftok, \$MQ,  \$stat ] , [ qw( *our_ftok *MQ  *stat) ] );
 
 # the writer
 my $lspid = $stat->lspid; # the writer
 my $lrpid = $stat->lrpid; # the reader
 my $qnum =  $stat->qnum ; # 
-my $mqid = $MQ->id  ; # hope the best
+my $mqid = $MQ->id  ; # the current identifier != ftok 
 
 
-printf "key: 0x%08x, ID=%d, lspid: %d,  lrpid: %d, qnum: %d, \n" , $our_ftok, $mqid , $lspid , $lrpid , $qnum ;
+printf  "going to kill key: 0x%08x, ID=%d, lspid: %d,  lrpid: %d, qnum: %d, \n" , $our_ftok, $mqid , $lspid , $lrpid , $qnum ;
 
+# cave - if there is no lspid or rspid, you kill 0 which is your own process group
+kill 'TERM' , $lspid if $lspid  ;
+sleep 5;
+kill 'TERM' , $lrpid if $lrpid  ;
+sleep 5;
+print "removing message queue\n";
+$MQ->remove ;
+print "...done.\n";
 
-die  "=============== debug =========== ";
-
-my $cnt =1;
-while (1) {
-
-  my $buf;
-  # $mq_my->rcv($buf, 1024, 1 , IPC_NOWAIT  );
-
-  $MQ->rcv($buf, 1024, $mq_mtype);
-  print $buf , "\n" if $buf  ;
-
-  # sleep ;
-  $cnt++;
-
-
-}
-
-exit 1;
-
+# die  "=============== debug =========== ";
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
