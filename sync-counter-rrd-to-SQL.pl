@@ -54,7 +54,7 @@ print STDERR  Data::Dumper->Dump ( [ \%credentials ] , [ qw( *credentials  ) ]  
 
 # sprintf template, vars:  
 # 	$rrd_file, CF aka 'AVERAGE', $starttime, $csv_file
-my $tpl_rrd2csv = './rrd2csv.pl %s %s  -eN -s%s -r 300 -a -x\; -M -t -f %s'; 
+# my $tpl_rrd2csv = './rrd2csv.pl %s %s  -eN -s%s -r 300 -a -x\; -M -t -f %s'; 
 
 #
 #   	mysqlimport -h $HOST -u $USER -p$PASSWD  --local \
@@ -63,10 +63,26 @@ my $tpl_rrd2csv = './rrd2csv.pl %s %s  -eN -s%s -r 300 -a -x\; -M -t -f %s';
 #		$DB $TEMPFILE
 #
 
+my  $HOST = $credentials{ HOST } or die " no HOST found in secret.pwd";
+my  $USER = $credentials{ USER } or die " no USER found in secret.pwd";
+my  $PASSWD = $credentials{ PASSWD  } or die " no PASSWD found in secret.pwd";
+my  $DB = $credentials{ DB  } or die " no DB found in secret.pwd";
+
+
+my $tpl_mysqlimport = <<"EOF_MYSQLIMPORT";
+mysqlimport -h $HOST -u $USER -p$PASSWD  --local \
+    --ignore --force --ignore-lines=1 --fields-terminated-by=';' \
+     $DB %s
+
+EOF_MYSQLIMPORT
+
+
+
 my $tmpdir = $credentials{ TMPDIR } or die " no temp dir found in secret.pwd";
 my $CF = $credentials{ CF } or die " no temp dir found in secret.pwd";
 my $start = $credentials{ START } or die " no start dir found in secret.pwd";
 
+my $tpl_rrd2csv = "./rrd2csv.pl %s $CF  -eN -s$start -r 300 -a -x\; -M -t -f %s";
 
 
 # my $csv_sprintf = $RRD_sprintf ;
@@ -81,9 +97,10 @@ for my $counter_tag ( sort keys %sql_tables ) {
 		my $csv_file = sprintf $csv_sprintf,  $tmpdir  , $RRD_prefix , $counter_tag, $table_tag ;
 		printf STDERR "processing SQL-update: %s -> %s\n" , $rrd_file, $csv_file ;
 
-		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file, $CF ,  $start, $csv_file ;
+		my $cmd_rrd2scv = sprintf $tpl_rrd2csv, $rrd_file,  $csv_file ;
 		print  "\t",  $cmd_rrd2scv , "\n";  
-
+		my $cmd_mysqlimport = sprintf $tpl_mysqlimport, $csv_file ;
+	       print  "\t",  $cmd_mysqlimport , "\n";
 	}
 }
 
