@@ -12,7 +12,7 @@ General approach: Fill some PERL hash with individual values, and let a default 
 ## handling counter register structure
 
 SDM 630 is a beast that knows much more than just kWh. There are close to 200 registers.  
-[RTFM](./docs/SDM630_MODBUS_Protocol.pdf)  ... cut'n-paste .... libreoffice calc .... what do I want? ...->  goes to:
+[RTFM](./SDM630_MODBUS_Protocol.pdf)  ... cut'n-paste .... libreoffice calc .... what do I want? ...->  goes to:
 
 ### `SDM630proto-usage.csv`  
 ... which ist (infrequently) maintained using vi.  
