@@ -7,13 +7,12 @@ as many sql tables, rrd graph templates ....
 No chance to manually keep that in sync ....  
 There is loads of default expansion implmented.  
   
-General approach: Fill some PERL hash with individual values, and let a default filler running over it at the end. This is preferrably done at at distinguished visible place in the config-whatever.pm files, not hidden in the worker scripts.   
+General approach: Fill some PERL hash with individual values, and let a default filler running over it at the end. This is preferrably done at  distinguished visible places in the config-whatever.pm files, not hidden deep in the worker scripts.   
 
 ## handling counter register structure
 
 SDM 630 is a beast that knows much more than just kWh. There are close to 200 registers.  
-see (./docs/SDM630_MODBUS_Protocol.pdf)  
-RTFM ... SDM-Manual ... cut'n-paste .... libreoffice calc .... what do I want? ...->  goes to:
+[RTFM](./docs/SDM630_MODBUS_Protocol.pdf)  ... cut'n-paste .... libreoffice calc .... what do I want? ...->  goes to:
 
 ### `SDM630proto-usage.csv`  
 ... which ist (infrequently) maintained using vi.  
