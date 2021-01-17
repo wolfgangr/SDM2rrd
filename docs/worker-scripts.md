@@ -22,7 +22,7 @@ my $interval = 15 ; # seconds between runs
 my $interval_shift = 7 ; # seconds shift from even interval
 ```
 ... yields runs at seconds 7, 22, 37, 52 counted from start of the minute. 
-This tuned out to deliver quite stable reading.  
+This turned out to deliver quite stable reading.  
 At an rrd step rate of 30 s = lowest RRA heartbeat this means 2 datapoints being merged into one rrd value.  
 Higher rates tend to overload the MODBUS, as it seems. Be aware that TCP transmission control ends at the USR. There is no control layer on the MODBUS section. However, there is random time lag introduced by the network. Thus, nasty things may happen. CRC check helps a lot.  
 
@@ -37,11 +37,14 @@ relies on `rrdtest.pl` as a helper ... to be documented ....
 
 
 ## infini-SDM-MODBUS-sniffer.pl
-The counter at the mains electicity grid connection. is a bit tricky. I have to **share the MODBUS** it with my infini inverter.  
+The counter at the mains electicity grid connection is a bit more tricky. I have to **share the MODBUS** connection of ot with my infini battery inverter.  
 Why?  
 The ifnini is supposed to charge a battery, when photovoltaic production exceeds local energy consumption, and feed it back the other way round.
 The infini is equipped with a modbus card to communicate with the SDM conter at mains connection.  
 It polls total power once a second from the SDM. I can passivly sniff this, but this way, I only get total power - nothing else.  
+
+There are 'man in the middle' hacks out there for this setting.  
+I'll try a different approach:  
   
 Good news: the **Modbus** protocol has **"multi master"** capability.  
 So I may inject additional commands to the bus, requesting other registers from the SDM.  
@@ -65,13 +68,13 @@ my $inter_query_stepping = 3 ; # how many native qry occasions to skip befor ins
 ```
 Translates to
 * starting at second No 7, we inject our first mutimaster query
-* at second No 10, 13, 16 we inject the other mutimaster query
+* at second No 10, 13, 16 we inject the other mutimaster queries
 * at second 15+7 = 22 we start again
 
 To keep the multimaster part small and fast, downstream data processing is handed over to a distinct process, communicating by a sysv message queue.
-I could not get Posix MQ to work under PERL- sorry ....  
+I could not get Posix MQ to work under PERL- wihtout leaving debian package boundaries. sorry ....  
   
-SysV message queue requires a file handle to generate unique key, shared by both partners on the line. I simply touch some `message_queue.kilroy` file. As long as nobody removes this, the message queue stays constant.  
+SysV message queue requires a file handle to generate unique key, shared by both partners on the line. I simply touch some `message_queue.kilroy` file. As long as nobody removes this, the message queue key stays constant.  
 At earlier trials I used the scripts own file handle. I had to learn that vi obviously renames files back and forward with their backup counterpart. This cuts mapping of filehandle with file name, sadly.
 
 
@@ -81,7 +84,8 @@ At earlier trials I used the scripts own file handle. I had to learn that vi obv
 
 simply dumps to stdout the MODBUS query derived from confguration.  
 PERL syntax, so only the hex coded lines are read.  
-`infini-SDM-MODBUS-sniffer.pl` reads this using backtick syntax `my @precooked = split ("\n",``$precooker``);`
+`infini-SDM-MODBUS-sniffer.pl` reads this using backtick syntax  
+`my @precooked = split ("\n",``$precooker``);`  
 The idea was to keep elaborated config processing and modbus protocol handling out of `infini-SDM-MODBUS-sniffer.pl` code.  
 was this a good idea?  
 ```
@@ -105,7 +109,8 @@ It's not reuqired for 24/7 production.
 
 ### `mqsv-SDM2rrd.pl`  
 Is the productive consumer of the mq stream.  
-It' derived from `USR-SDM-Poller.pl` and shares quite some code. Most of it by simple cut'n paste. For sure there is some potential for proper modularisation.
+It's derived from `USR-SDM-Poller.pl` and shares quite some code.  
+Most of it by simple cut'n paste. For sure there is some potential for proper modularisation.
 
 
 ### `watchdog_mqsv.sh`
@@ -120,7 +125,7 @@ Supposedly called on intervals as a cron job.
 
 
 ## Data flow
-
+see[data_flow.md](data_flow.md)
 
 
 
