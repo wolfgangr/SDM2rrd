@@ -7,8 +7,8 @@
 * want it in a configurable way
 * want to integrate it with other rrd
 * combine rrd for high volume, high time resolution and fast and simple plotting, and SQL for long time archives and sophisticated queries
-So I have to find my way between narrow banded rrd frontned and full fledged freedom of turing capable language.
-I decided for last and restrain myself backagain by somewhat sophisticated configuration.
+So I have to find my way between narrow banded rrd frontend and full fledged freedom of turing capable language.
+I decided for last and restrain myself back again by somewhat sophisticated configuration.
 
 
 ### Data flow overview: SDM -> rrd -> SQL and HTML
@@ -46,17 +46,20 @@ That's what I am trying to do here.
 
 
 ### how it works 
+  
 ... and why did it become that complicated?  
 Well, at the moment I have close to 30 rrds from my 7 counters and maybe some hundreds of registers.  
 as many sql tables, rrd graph templates ....  
 
-After fist playing, I figured out that there is some challenge to balance the tradeoff between ressource usage, time resolution and archive time. So I had to drop the first approach to keep any flie-spot forever. see [Ressource usage](./docs/ressources.md)
+After fist playing, I figured out that there is some challenge to balance the tradeoff between ressource usage, time resolution and archive time. So I had to drop the first approach to keep any flie-spot forever.  
+see [Ressource usage](./docs/ressources.md)
 
 No chance to manually keep that in sync ....  
 There is loads of default expansion implmented. 
 See  [config.md](./docs/config.md ) for details.
 
-Only after the config machine was in place, writing the [worker scripts](.docs/worker-scripts.md) was close to the straight forward diligence work I expected. There may be still lot's of potential for clarification, bautification, simplyfication. But, well, as long as it works...
+Only after the config machine was in place, writing the [worker scripts](.docs/worker-scripts.md) was close to the straight forward diligence work I expected. There may be still lot's of potential for clarification, beautification, simplification.  
+But, well, as long as it works...
 
 
 ### Disclaimer
