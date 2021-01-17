@@ -1,14 +1,19 @@
-# ressource usage
+# Ressource Usage
 
-I have it running togehter with a couple of similiar projects on a 10 year old 'thin client' laptop style hardware single core 1200 MHz AMD G-T44R Processor and 4GB RAM. Mass storage is a 64 GB SSD. rrd as configured need 311 MB - so this is luxury.
+I have it running togehter with a couple of similiar projects on a 10 year old ' Fujitsu Futro S900 thin client' laptop style hardware. CPU is a single core 1200 MHz AMD G-T44R Processor, and 4GB RAM. Mass storage is a 64 GB SSD.  
+  
+rrd as configured need 311 MB - so there is still some luxury.  
 Nevertheless, it's wise to use df and du commands and maybe a calculator while playing with rrd configurations.
 
-There is a 64-bit debian 10.7 on the box.
-Completely headless except for bios configuration. 'Thin server', so to say.
-All PERL modules used are from debian main repo, no backports, no CPAN, no custom build.
+There is a 64-bit debian 10.7 on the box.  
+Completely headless except for bios configuration. 'Thin server', so to say.   
+All PERL modules used are from debian main repo, no backports, no CPAN, no custom build.  
 
-So I guess a raspberry could do the job as well, but I haven't tried.
-Personally, I don't like the idea of runnig rrd on SD-cards. Don't like mass storage, network and peripheral access all sharing the same USB Bus. File systems for 24/7 operations mounted over fragile USB plugs. But all that may be a matter of taste.
+To my guess, a raspberry could do the job as well, but I haven't tried.  
+Personally, I don't like the idea of runnig rrd on SD-cards.  
+Don't like mass storage, network and peripheral access all sharing the same USB Bus.  
+File systems for 24/7 operations mounted over fragile USB plugs.  
+But all that may be a matter of taste.
 
 
 
