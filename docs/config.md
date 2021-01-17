@@ -1,9 +1,8 @@
 
 
 
-# how it works 
-... and why did it become that complicated?  
-Well, at the moment I have close to 30 rrds from my 7 counters and maybe some hundreds of registers.  
+# The config pivot hub
+... close to 30 rrds from my 7 counters and maybe some hundreds of registers.  
 as many sql tables, rrd graph templates ....  
 No chance to manually keep that in sync ....  
 There is loads of default expansion implmented. Approach: Fill some PERL hash with individual values, and let a default filler running over it at the end. This is preferrably distinguished in the config-whatever.pm files, not hidden in the worker scripts.   
