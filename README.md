@@ -6,6 +6,7 @@
 * need to integrate **Modbus MultiMaster** counter for my **voltronic infini 10k grid compensation** setup
 * want it in a configurable way
 * want to integrate it with other rrd
+* combine rrd for high volume, high time resolution and fast and simple plotting, and SQL for long time archives and sophisticated queries
 So I have to find my way between narrow banded rrd frontned and full fledged freedom of turing capable language.
 I decided for last and 
 
@@ -161,7 +162,38 @@ E_bidir
 E1_sld E2_sld E3_sld E_sld E1_imp E2_imp E3_imp E_imp E1_exp E2_exp E3_exp E_exp
 ```
 
-  
+
+#### SQL database structure
+
+~~There is no location to configure SQL tables. Instead, it is derived from the config machine outlayed above.  ~~
+
+SQL table definition is included in `rrd_def.pm` as a reference to `rrd` definition.  
+This way we can restrict SQL export to a limited subset of fields and rrd CF.  
+
+
+```
+our %SQL_export = (
+	elbasics => { CF => 'AVERAGE' , fields     => [ qw ( P1 P2 P3 ) ] } ,
+	E_unidir => { CF => 'LAST'    , any   => 1 } ,
+	E_bidir  => { CF => 'LAST'    , any   => 1 } ,
+	totalP   => { CF => 'AVERAGE' , fields     => [ qw ( Ptot ) ] } ,
+
+) ;
+```
+
+`./test-SQL-def.pl` is just a modfied version of  `./test-counter-def.pl` as a development aid to print the expansion of this.  
+
+```
+./rrd/mySDM_mains_d_E_bidir.rrd => ./rrd/mySDM_mains_d_E_bidir.sql 
+  has cols: E1_sld, E2_sld, E3_sld, E_sld, E1_imp, E2_imp, E3_imp, E_imp, E1_exp, E2_exp, E3_exp, E_exp
+./rrd/mySDM_mains_d_elbasics.rrd => ./rrd/mySDM_mains_d_elbasics.sql 
+  has cols: P1, P2, P3
+./rrd/mySDM_mains_d_totalP.rrd => ./rrd/mySDM_mains_d_totalP.sql 
+  has cols: Ptot
+    .....
+```
+
+
 #### data storage initialisation
 
 `create_whatever_*.sh|pl` setup the data files according to the configured structure
