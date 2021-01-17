@@ -1,11 +1,12 @@
 # Where work is done
 
-This explains the scrits runnint 24/7 either as cron jobs or continously.
+This explains the scrits running 24/7 either as cron jobs or continously.
 
 ## `USR-SDM-Poller.pl`
 polls 6 counters on the USR gadget.  
 USR access is configured in the head of the script, since there is no need to sync that with other places - yet.   
 Beware that USR does **not translate** MODBUS-RTU to MODBUS-TCP, **just wraps** it into TCP transfer.  
+And tcp securing ends at the USR - not at the counter. Shitt may happen at that last meters of twisted wires.  
 
 So I's up to us to implement
 * CRC management both on query and upon checking responses
