@@ -53,7 +53,7 @@ as many sql tables, rrd graph templates ....
 No chance to manually keep that in sync ....  
 There is loads of default expansion implmented. Approach: Fill some PERL hash with individual values, and let a default filler running over it at the end. This is preferrably distinguished in the config-whatever.pm files, not hidden in the worker scripts.   
 
-#### counter register structure
+#### handling counter register structure
 
 SDM 630 is a beast that knows much more than just kWh. There are close to 200 registers.  
 RTFM ... SDM-Manual ... cut'n-paste .... libreoffice calc .... what do I want? ->  `SDM630proto-usage.csv`  
@@ -62,10 +62,11 @@ Only up to 40 registers are allowed for a single query. So I need to collect the
  `./test-extract-SDM-def.pl` is a debugging helper for this step.
  
  `my_counters.pm` keeps configuration for each of my physical RDM. There is some default procedure implemented.  
-`extract-SDM-def.pm` merges registers and physical config into PERL hashes for other scripts.  
-`test-counter-def.pl` can test and debug print this process. We get sth like:
+ in `rrd_def.pm` we decide how to aggregate the SDM register sets to rrd files and database tables.
+ `extract-SDM-def.pm` merges registers and physical config into PERL hashes for other scripts.  
+**`test-counter-def.pl` can test and debug** print this process. We get sth like:
 
-`@SDM_regs` imported definition of a single counter register
+`@SDM_regs` - imported definition of a single counter register  
 | sequence | label | unit | query burst selector | mnemo tag |
 ```
 @SDM_regs = ( [
@@ -73,7 +74,7 @@ Only up to 40 registers are allowed for a single query. So I need to collect the
     ],
 ```
 
-`%SDM_reg_by_tag` hashed version to make code more readable
+`%SDM_reg_by_tag` - hashed version to make code more readable, since we may access fields my hash key instead of array index.
 ```
 %SDM_reg_by_tag = (
                     'U1' => {
@@ -84,7 +85,7 @@ Only up to 40 registers are allowed for a single query. So I need to collect the
                             },
 ```
 
-`%SDM_selectors` group registers by coherent query bursts  
+`%SDM_selectors` - group registers by coherent query bursts  
 ```
 %SDM_selectors = (
                    '3' => {
@@ -94,7 +95,7 @@ Only up to 40 registers are allowed for a single query. So I need to collect the
                             '178' => 'E2_exp',
 ```
 
-`%RRD_definitions` are configured and expanded in `rrd_def.pm`  
+`%RRD_definitions` - are configured and expanded in `rrd_def.pm`  
 ```
 %RRD_definitions = (
                      'elquality' => {
@@ -123,9 +124,10 @@ RRA:MAX:0.5:1h:6M
                                     },
 ```
 
-`%Counterlist`: configurations of physical counters  
-`selectors` tell what query burst to read when polling SDM
-`rrds` tell us what to write, to expanded by `%RRD_definitions` 
+**`%Counterlist`: configurations of physical counters**  
+this is skd of a pivot point.  
+`selectors` tell what query burst to read when polling SDM  
+`rrds` tell us what to write, to expanded by `%RRD_definitions`  
 ```
 %Counterlist = (
                  'subs2' => {
