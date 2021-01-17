@@ -19,24 +19,30 @@ But all that may be a matter of taste.
 
 ## system load
 
-CPU load is << 5 % during polling and goes close to 100 % for a second or so when performing large requestes as in producing charts or preparing SQL database uploads.
-Both rrd and PERL hash arithmetics appears to be implemented quite efficiently at run time.
-However, there is quite some penalty on PERL startup. I think that many included libraries come with quite some penalty regarding this. So it's not wise to cron start PERL at minute intervals. I prefer running demons with internal 'sleep' commands. In my development process, this cutted down system load by 95 % and more.
+CPU load is << 5 % during polling and goes close to 100 % for a second or so when performing large requestes as in producing charts or preparing SQL database uploads.  
+Both rrd and PERL hash arithmetics appears to be implemented quite efficiently at run time.  
+However, there is quite some penalty on PERL startup.   
+I think that many included libraries come with quite some penalty regarding this.  
+May be I will drop the option of wolr wide time zone configurability?   
+
+Anyway, it's not wise to cron start PERL at minute intervals.  
+I prefer running demons with internal 'sleep' commands.   
+In my development process, this cutted down system load by 95 % and more.
 
 
-## disk space
+## Disk Space
 
-### rrd databases
+### rrd Databases
 
 disk space is determined by rrd files. rtfM over there how to calculate.  
 
 Be aware that rrd statically reserves all disk space required to cover the configured time frame.  
 So there is a **tradeoff between temporal resolution, time coverage and disk space**.  
-My current config usses 311 MByte. Still OK on a 64 GB SSD.  
+My current config usses 311 MByte. Still OK on a 64 GB SSD. And there are other projects and furthr plans.   
 
-Just an example: consider this 2.somewhat MB file 
-`-rw-r--r-- 1 myuser myuser  2265096 Jan 17 14:05 mySDM_subs1_totalP.rrd`
-is composed of
+Just an example: consider this 2.somewhat MB file:   
+`-rw-r--r-- 1 myuser myuser  2265096 Jan 17 14:05 mySDM_subs1_totalP.rrd`  
+it is composed of
 ```
 ...:~/eastron_SDM/mySDMpoller$ rrdtool info rrd/mySDM_subs1_totalP.rrd | grep step
 step = 30
