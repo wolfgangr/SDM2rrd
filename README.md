@@ -50,7 +50,8 @@ Well, mhh, who really knows?
 ... and why did it become that complicated?  
 Well, at the moment I have close to 30 rrds from my 7 counters and maybe some hundreds of registers.  
 as many sql tables, rrd graph templates ....  
-No chance to sync that manually....  
+No chance to manually keep that in sync ....  
+There is loads of default expansion implmented. Approach: Fill some PERL hash with individual values, and let a default filler running over it at the end. This is preferrably distinguished in the config-whatever.pm files, not hidden in the worker scripts.   
 
 #### counter register structure
 
@@ -124,7 +125,7 @@ RRA:MAX:0.5:1h:6M
 
 `%Counterlist`: configurations of physical counters  
 `selectors` tell what query burst to read when polling SDM
-`rrds` tell us what to write #### how is this mapped to tags????????????
+`rrds` tell us what to write, to expanded by `%RRD_definitions` 
 ```
 %Counterlist = (
                  'subs2' => {
