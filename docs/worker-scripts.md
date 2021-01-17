@@ -127,6 +127,7 @@ Supposedly called on intervals as a cron job.
 ## disk space
 
 disk space is determined by rrd files. rtfM there how to calculate.  
+Be aware that rrd statically reserves all disk space required to cover the configured time frame.
 My current config usses 311 MByte. Still OK on a 64 GB SSD.  
 
 Just an example: consider this 2.somewhat MB file 
@@ -148,7 +149,7 @@ rra[2].pdp_per_row = 10
 rra[3].pdp_per_row = 120
 rra[4].pdp_per_row = 120
 ```
-which derives fromthis stanza in `rrd_def.pm`
+which derives from this stanza in `rrd_def.pm`
 ```
 RA:AVERAGE:0.5:30s:1M
 RRA:AVERAGE:0.5:5m:1y
@@ -158,4 +159,16 @@ RRA:MAX:0.5:1h:2y
 ```
 let's calculate: 
 * step 30 = 1 pdp
-`* rra[0].pdp_per_row = 1` 
+* `rra[0].pdp_per_row = 1` means 1 pdp = 30 s covered by a single rrd set
+* ... x 89,280 = 2,677,200 seconds coverage
+* ... / 3600 s = 743.7 hr
+* ... / 24 h ~ 31 d - as requested by `RA:AVERAGE:0.5:30s:1M`
+simliarly: 
+* `RRA:AVERAGE:0.5:5m:1y` maps to
+* `rra[1].rows = 105408` x `rra[1].pdp_per_row = 10` x 30 s (per pdp step) = 31,622,400 s = 366 days
+
+* all rra row numbers add up to 89,280 + 105,408 + 26,784 + 43,920 + 17,568 = 282,960
+* .... x 8 = 2,263,680 
+* which explains more than 99 % of rrd file size
+
+
