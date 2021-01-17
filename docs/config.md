@@ -10,25 +10,31 @@ There is loads of default expansion implmented. Approach: Fill some PERL hash wi
 ## handling counter register structure
 
 SDM 630 is a beast that knows much more than just kWh. There are close to 200 registers.  
-RTFM ... SDM-Manual ... cut'n-paste .... libreoffice calc .... what do I want? ->  `SDM630proto-usage.csv`  
+RTFM ... SDM-Manual ... cut'n-paste .... libreoffice calc .... what do I want? ...->  goes to:
+
+### `SDM630proto-usage.csv`  
+... which ist (infrequently) maintained using vi.  
 Any register I want to retrieve gets a mnemonic `tag` associated with it.  
 Only up to 40 registers are allowed for a single query. So I need to collect them to multiple query bursts.  
  `./test-extract-SDM-def.pl` is a debugging helper for this step.
  
- `my_counters.pm` keeps configuration for each of my physical RDM. There is some default procedure implemented.  
+### `my_counters.pm` 
+ keeps configuration for each of my physical RDM. There is some default procedure implemented.  
  in `rrd_def.pm` we decide how to aggregate the SDM register sets to rrd files and database tables.
  `extract-SDM-def.pm` merges registers and physical config into PERL hashes for other scripts.  
 **`test-counter-def.pl` can test and debug** print this process. We get sth like:
 
-`@SDM_regs` - imported definition of a single counter register  
-| sequence | label | unit | query burst selector | mnemo tag |
+#### `@SDM_regs` 
+- imported definition of a single counter register  
+fields: | sequence | label | unit | query burst selector | mnemo tag |
 ```
 @SDM_regs = ( [
     [ '1', '"Phase 1 line to neutral volts"',  '"V"', '1', '"U1"'
     ],
 ```
 
-`%SDM_reg_by_tag` - hashed version to make code more readable, since we may access fields my hash key instead of array index.
+#### `%SDM_reg_by_tag` - hashed version 
+to make code more readable, since we may access fields my hash key instead of array index.
 ```
 %SDM_reg_by_tag = (
                     'U1' => {
@@ -39,7 +45,8 @@ Only up to 40 registers are allowed for a single query. So I need to collect the
                             },
 ```
 
-`%SDM_selectors` - group registers by coherent query bursts  
+#### `%SDM_selectors` 
+- group registers by coherent query bursts  
 ```
 %SDM_selectors = (
                    '3' => {
@@ -49,7 +56,8 @@ Only up to 40 registers are allowed for a single query. So I need to collect the
                             '178' => 'E2_exp',
 ```
 
-`%RRD_definitions` - are configured and expanded in `rrd_def.pm`  
+#### `%RRD_definitions` 
+- are configured and expanded in `rrd_def.pm`  
 ```
 %RRD_definitions = (
                      'elquality' => {
@@ -78,8 +86,9 @@ RRA:MAX:0.5:1h:6M
                                     },
 ```
 
-**`%Counterlist`: configurations of physical counters**  
-this is skd of a pivot point.  
+#### `%Counterlist` 
+- **configurations of physical counters**  
+this is skd of a pivot point merging 'where stuff comes from' hits 'where stuff gos to'  
 `selectors` tell what query burst to read when polling SDM  
 `rrds` tell us what to write, to expanded by `%RRD_definitions`  
 ```
@@ -98,7 +107,8 @@ this is skd of a pivot point.
                               'Label' => 'Stall + Werkstatt'
 ```
 
-... which in short is aggregated to our rrd and SQL-table structures:
+#### ... boils down to the essence:
+... which finally is aggregated to our rrd and SQL-table structures:
 ```
  ===== rrd defs : elquality elbasics totalP totalP_hires E_unidir E_bidir =====
 elquality
@@ -176,5 +186,11 @@ TMPDIR=./tmp
 START is provided in rrd time notation.  
 A long time range helps to fill a new database with historic stuff (eg 10 days back, can as well be 100 or 1000d).  
 For continued sync, this value should overlap with cron call intervals. may balance redundancy with system load here. 
+
+TMPDIR keeps csv files, named by DB table name.  
+Thus they get overwritten at any update run, so there is no need for tmp cleanup.  
+And provides easy debugging access.  
+
+
 
 
