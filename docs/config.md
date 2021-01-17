@@ -36,7 +36,7 @@ fields: | sequence | label | unit | query burst selector | mnemo tag |
 ```
 
 #### `%SDM_reg_by_tag` - hashed version 
-to make code more readable, since we may access fields my hash key instead of array index.
+- to make code more readable: we may access fields by hash key instead of array index.
 ```
 %SDM_reg_by_tag = (
                     'U1' => {
@@ -48,7 +48,7 @@ to make code more readable, since we may access fields my hash key instead of ar
 ```
 
 #### `%SDM_selectors` 
-- group registers by coherent query bursts  
+- group registers to coherent query bursts spannning not more than 40 counter registers 
 ```
 %SDM_selectors = (
                    '3' => {
@@ -63,11 +63,12 @@ to make code more readable, since we may access fields my hash key instead of ar
 ```
 %RRD_definitions = (
                      'elquality' => {
-                                      'rradef' => 'RRA:AVERAGE:0.5:30s:10d
-RRA:AVERAGE:0.5:5m:1M
-RRA:AVERAGE:0.5:1h:6M
-RRA:MAX:0.5:1h:6M
-',
+                                      'rradef' => 
+				      		'RRA:AVERAGE:0.5:30s:10d
+						RRA:AVERAGE:0.5:5m:1M
+						RRA:AVERAGE:0.5:1h:6M
+						RRA:MAX:0.5:1h:6M
+					  ',
                                       'heartbeat' => 30,
                                       'step' => 30,
                                       'fields' => [
@@ -130,7 +131,7 @@ E1_sld E2_sld E3_sld E_sld E1_imp E2_imp E3_imp E_imp E1_exp E2_exp E3_exp E_exp
 
 ## SQL database structure
 
-~~There is no location to configure SQL tables. Instead, it is derived from the config machine outlayed above.  ~~
+~~There is no location to configure SQL tables. Instead, it is derived from the config machine outlayed above~~
 
 SQL table definition is included in `rrd_def.pm` as a reference to `rrd` definition.  
 This way we can restrict SQL export to a limited subset of fields and rrd CF.  
