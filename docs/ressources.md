@@ -83,12 +83,12 @@ simliarly:
 * rrd is hard coded to use 64 bit numbers (Don't ask me why...) = 8 byte
 * .... x 8 = 2,263,680 byte
 * which explains more than 99 % of rrd file size
-* beware: this is a rrd with one field aka `DS` aka data source only. Disk space multiplies by the number of fields!
+* beware: this is a rrd with one field aka `DS` aka data source only. **Disk space multiplies by the number of fields!**
 
 
-another case: `mySDM_mains_totalP_hires.rrd`
-Here I capture mains power flow at 1s rate.
-What I want to see is how precise the infini is doing its power compensations, hwo it reacts to sudden changes in demand / supply, and how stable the control implementation is there.  
+another case: `mySDM_mains_totalP_hires.rrd`  
+Here I capture mains power flow at 1s rate.  
+What I want to see is how precise the infini is doing its power compensations, how  it reacts to sudden changes in demand / supply, and how stable the control implementation is there.  
 Only one week costs me ~~ 5 MB. But is there any need for archived data of this precision?
 ```
 RRA:AVERAGE:0.3:1s:1w
