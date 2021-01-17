@@ -167,7 +167,7 @@ create_tables.sh
 ```
 
 do what their name implies and set up the data files according to the configured structure.  
-rtfS aka rtf**Source**
+details: rtfS aka rtf**Source**  
 I prefer to remove their executable flag to avoid accicential deletion of populated rrds and databases.
 
 ## database credentials
