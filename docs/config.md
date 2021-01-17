@@ -1,14 +1,14 @@
 
 
 
-### how it works 
+# how it works 
 ... and why did it become that complicated?  
 Well, at the moment I have close to 30 rrds from my 7 counters and maybe some hundreds of registers.  
 as many sql tables, rrd graph templates ....  
 No chance to manually keep that in sync ....  
 There is loads of default expansion implmented. Approach: Fill some PERL hash with individual values, and let a default filler running over it at the end. This is preferrably distinguished in the config-whatever.pm files, not hidden in the worker scripts.   
 
-#### handling counter register structure
+## handling counter register structure
 
 SDM 630 is a beast that knows much more than just kWh. There are close to 200 registers.  
 RTFM ... SDM-Manual ... cut'n-paste .... libreoffice calc .... what do I want? ->  `SDM630proto-usage.csv`  
@@ -117,7 +117,7 @@ E1_sld E2_sld E3_sld E_sld E1_imp E2_imp E3_imp E_imp E1_exp E2_exp E3_exp E_exp
 ```
 
 
-#### SQL database structure
+## SQL database structure
 
 ~~There is no location to configure SQL tables. Instead, it is derived from the config machine outlayed above.  ~~
 
@@ -148,8 +148,34 @@ our %SQL_export = (
 ```
 
 
-#### data storage initialisation
+## data storage initialisation
 
-`create_whatever_*.sh|pl` setup the data files according to the configured structure
+
+```
+create_SDM_rrd.pl 
+create_tables.pl
+create_tables.sh
+```
+
+do what their name implies and set up the data files according to the configured structure.  
+rtfS aka rtf**Source**
+I prefer to remove their executable flag to avoid accicential deletion of populated rrds and databases.
+
+## database credentials
+
+live in in `.gitignore`-ed `secret.pwd` and sourced by `create_tables.sh` and `sync-counter-rrd-to-SQL.pl`.  
+```
+PASSWD="tIhsVeRySECret12345"
+USER=SDM_at_my_database
+DB=SDM-counter
+# START=e-2h
+START=e-2d
+# START=e-10d
+HOST=database.server.IP.or.host.name.of.my.local.domain
+TMPDIR=./tmp
+```
+START is provided in rrd time notation.  
+A long time range helps to fill a new database with historic stuff (eg 10 days back, can as well be 100 or 1000d).  
+For continued sync, this value should overlap with cron call intervals. may balance redundancy with system load here. 
 
 
