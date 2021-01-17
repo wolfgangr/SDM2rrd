@@ -123,6 +123,32 @@ Check the rrds fed by the sniffer / mq machine and resurrect the whole thing in 
 Updates a subset of rrd data to mysql.  
 Supposedly called on intervals as a cron job.  
 
+My databases have two time columns:
+- `time`, when the values were collected
+- `update_time`, when the values are written to the SQL  
+`time` is the primary index.  
+This way, datasets can be loaded repeatedly, the machine keeps them unique automagically.
+
+```
+CREATE TABLE `mySDM_mains_d_elbasics` (
+  `time` datetime NOT NULL,
+  `P1` float DEFAULT NULL,
+  `P2` float DEFAULT NULL,
+  `P3` float DEFAULT NULL,
+  `update_time` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
+  PRIMARY KEY (`time`)
+) ENGINE=MyISAM DEFAULT CHARSET=ascii ;
+```
+I started with a simple bash approach of rrd2csv.pl > mysqlimport calls.  
+Sadly, this was broken, wenn I switched to configurable subsets of data fields.  
+Reason: I had to switch to explicit column naming syntax using `--columns=...` option.  
+Before, there was automagic NULL loaded into `update_time`, because the csv had one column less than the database expects.  
+Beore I started fiddling with awk or sed, I decided to use perl for DB update.  
+Thus I hit some cron issues, but could solve them.  
+
+
+
+
 
 ## Data flow
 see[data_flow.md](data_flow.md)
