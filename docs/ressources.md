@@ -10,7 +10,7 @@ All PERL modules used are from debian main repo, no backports, no CPAN, no custo
 So I guess a raspberry could do the job as well, but I haven't tried.
 Personally, I don't like the idea of runnig rrd on SD-cards. Don't like mass storage, network and peripheral access all sharing the same USB Bus. File systems for 24/7 operations mounted over fragile USB plugs. But all that may be a matter of taste.
 
-## timing issues
+
 
 ## system load
 
@@ -21,9 +21,9 @@ However, there is quite some penalty on PERL startup. I think that many included
 
 ## disk space
 
+### rrd databases
+
 disk space is determined by rrd files. rtfM over there how to calculate.  
-Of course, long time database sync at fine time resolution may be even worse.  
-There are temporary csv files generated. So, be prudent.  
 
 Be aware that rrd statically reserves all disk space required to cover the configured time frame.  
 So there is a **tradeoff between temporal resolution, time coverage and disk space**.  
@@ -75,6 +75,10 @@ simliarly:
 * beware: this is a rrd with one field aka `DS` aka data source only. Disk space multiplies by the number of fields!
 
 
+another case: `mySDM_mains_totalP_hires.rrd`
+Here I capture mains power flow at 1s rate.
+What I want to see is how precise the infini is doing its power compensations, hwo it reacts to sudden changes in demand / supply, and how stable the control implementation is there.  
+Only one week costs me ~~ 5 MB. But is there any need for archived data of this precision?
 ```
 RRA:AVERAGE:0.3:1s:1w
 RRA:AVERAGE:0.5:30s:1M
@@ -85,6 +89,15 @@ RRA:MAX:0.5:1h:2y
 ```
 
 ```
+step = 1
+  ....
+rra[0].rows = 604800
+rra[1].rows = 89280
+rra[2].rows = 105408
+rra[3].rows = 26784
+rra[4].rows = 43920
+rra[5].rows = 17568
+  ....
 rra[0].pdp_per_row = 1
 rra[1].pdp_per_row = 30
 rra[2].pdp_per_row = 300
@@ -92,3 +105,78 @@ rra[3].pdp_per_row = 300
 rra[4].pdp_per_row = 3600
 rra[5].pdp_per_row = 3600
 ```
+
+ 
+### SQL databases
+
+rrd is the hot thing, SQL is the long time archive.  
+backup as well, so it's on a different machine, with a huge TB mirrored hard drive, accessible for elaborated backup machinery.
+Why I may be interested in some fly-speck when it comes to monitoring feeback control loops, for sure I don't need those in the long term records.  
+
+The SQL database time resoultion is hardcoded by the `-r 300` clause in `sync-counter-rrd-to-SQL.pl`:  
+`my $tpl_rrd2csv = "./rrd2csv.pl %s %s  -eN -s$start -r 300 -a -x\\; -M -t ";`
+The reason is that I have different data sources, eg photovoltaic power logging, with that same resolution.
+SQL field selection is provided in 
+
+It were not a big deal to have that configurably as well.  
+However, imho it does not make much sense to feed values into a SQL that do not match rrd rra rates, due to interpolation effects.
+
+the fields exported are defined in `rrd_def.pm`
+```
+our %SQL_export = (
+	elbasics => { CF => 'AVERAGE' , fields     => [ qw ( P1 P2 P3 ) ] } ,
+	E_unidir => { CF => 'LAST'    , any   => 1 } ,
+	E_bidir  => { CF => 'LAST'    , any   => 1 } ,
+	totalP   => { CF => 'AVERAGE' , fields     => [ qw ( Ptot ) ] } ,
+
+) ;
+```
+I only want total power and energy in my archive. 
+No Voltages, no Currents, no apparent power, no THD....
+There is still some redundancy, since energy is the the integral of Power.
+However, there is the issue of differential vs integral errors. And when it boils down to money, energy drawn from grid and energy supplied to grid has different pricing (and more....), so I don't want to destroy information by adding those up.
+
+
+### SQL upload `tmp/*.csv`
+
+I still have `START=e-2d` in my `secret.pwd` and call this by `cron` every three hours.  
+So there is an overlap by factor of 16.  
+However, these 2 days fill just some 400 K - no issue.  
+  
+So even long term replays might not hit disk space limits. Well, be prudent. nevertheless...   
+
+
+## timing issues
+
+### SQL upload `tmp/*.csv`- again
+
+The high overlap for sql upload causes 100 % CPU loads for some seconds.
+So may be I might
+* reduce the cron interval
+* reduce even more the replay time, in result
+* recue the overlap
+* maybe have a redundant 'gap filler' long term overlap upload once a day or so.
+
+
+### rrd updates
+read and understand http://rrdtool.vandenbogaerdt.nl/process.php  
+If you don't undestand it, read it again.  
+I hat to read it three times, and a lot of futile tempering with my rrd inbetween.  
+And for sure, still many improvements possible....
+
+
+### cron job concurrency
+
+Since I have a couple of similiar projects on my tiny box, I trie to stagger cron jobs.
+I switched from a fixed apprach aka `2-23/3 * * * * ... my/cmd....` to some randomized staggering:
+
+`30 */3    * * *  rnd_sleep.sh 1200 ;  cd ~wrosner/eastron_SDM/mySDMpoller/ ; ./sync-counter-rrd-to-SQL.pl > /dev/null  2>&1`
+
+where `rnd_sleep.sh ` is just a little wrapper
+```
+....$ cat /usr/bin/rnd_sleep.sh
+#!/bin/bash
+sleep $(( RANDOM % $1 ))
+```
+Why? I had to learn that cron runs `/bin/sh`, not `/bin/bash` on debian-of-the-shelf.  
+And many environment variables are missing as well....
