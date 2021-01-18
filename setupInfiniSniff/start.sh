@@ -34,3 +34,4 @@ sleep 2
 
 # don' return to systemd, this breaks `notify` setting 
 # sleep infinity
+exit 1

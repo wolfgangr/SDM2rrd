@@ -170,11 +170,43 @@ We kept the setting with distinct logs for couter bus errors and system errors.
 ```
 
 #### cleaning up the message queue
-... is performed by calling a slightly modified version of `mqsv-cleanup-systemd.pl`  
-by a `ExecStopPost=$setup_dir/mqsv-cleanup-systemd.pl` stanza.  
+... is performed by calling a slightly modified version of `mqsv-cleanup-systemd.pl`
+by a `ExecStopPost=$setup_dir/mqsv-cleanup-systemd.pl` stanza.
 
-Since probably systemd already killed the users of the queue, we reduced the sleep times.  
+Since probably systemd already killed the users of the queue, we reduced the sleep times.
 May be it were even possible to leave the queue untouched, but , well, hm, ....
+
+
+
+#### watchdog debugging 
+This provides a nice exercise for debugging and understanding `systemd` config.  
+I like to arrange thre console windows:
+* `sudo less /var/log/syslog` plus 'capital-F' or live update to see what the system thinks
+* `watch -n1 rrdtest.pl rrd/mySDM_mains_*.rrd` to see what really happens at the rrds
+* an interactive command to issue things like  `kill`, `systemctl` etc  
+
+So what I have seen:  
+
+* killing `./infini-SDM-MODBUS-sniffer.pl` is immediadetely recognized by `systemd` and a restart is launched. Logging is up again in less than a minute
+* killing `./mqsv-SDM2rrd.pl` results in the sniffer stuffing the message queue, but nothing is written to rrd. So it takes the watchdog's gracetime plus the unit files configured Watchdog Time untile restart is triggered
+* killing the watchdog `./watchdogInfini_systemd.pl` results in the same behaviour. Although 
+* killing the `start.sh` shell stops logging, but does not trigger a restart
+
+
+The first 3 cases are perfectly in line with my expectations.  
+However, the last case is weird, and not what I want.  
+   
+This is what I get logged:
+```
+Jan 19 00:04:37 kellerkind systemd[1]: sdmInfini.service: Main process exited, code=killed, status=15/TERM
+Jan 19 00:04:39 kellerkind sdmUSR-logger[6883]: going to kill key: 0x01011e9a, ID=3276808, lspid: 6621,  lrpid: 6587, qnum: 0,
+Jan 19 00:04:39 kellerkind sdmUSR-logger[6883]: removing message queue
+Jan 19 00:04:39 kellerkind sdmUSR-logger[6883]: ...done.
+Jan 19 00:04:39 kellerkind systemd[1]: sdmInfini.service: Succeeded.
+```
+Looks like systemd thinks this is intended behaviour. hm. still rtfM on TODO ...
+
+
 
 
 

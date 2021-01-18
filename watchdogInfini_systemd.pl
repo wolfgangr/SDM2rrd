@@ -68,7 +68,7 @@ my $gracetime = 120 ;
 my $looptime = 20 ; # sleep between tests - recommended half of WatchdogSec=240 in service file
 my $loopt_onfail = 2; # may switch to faster polling to 
 
-my $logstring = "SDM USR poller WATCHDOG: %s\n";
+my $logstring = "SDM infini Modbus Multimaster WATCHDOG: %s\n";
 
 # ------- end of config ---------------------------------
 #
