@@ -3,46 +3,37 @@
 first, read disclamer!
 
 ```
+cd setupFOOBAR
 ./my_configure.pl
 sudo ./install.sh
 ```
 either 
 * be happy
 * reinstall your system
-* start debugging
+* start debugging  
 good luck!
 
 
 
-# `systemd` setup machine
-
-This is my first `systemd` start-stop configuration.  
-So I keep my memories here - for me and may be interested public.  
-
-## Old Times vs New Times
-
-On development, I drafted the `watchdog.sh` with 'good old' unix style in mind.  
-So my plan was to wirte sysV init scripts in the end.  
-  
-However, I had to find that the times of sysV init are gone without doubt, even if 10 yr old pro/con discussions still lingering on the web may tell sth else.  
-`sytemd` is `PID0` in these days.
-
-So I had to climb the `systemd` learning curve and found it not too steep at all.  
-To be honest, I start to like it :-)  
-When I compare my watchdog and my startup scripts, they cut down by 3/4.  
-And the logger itself gets close to immortality - pure magic as it seems.  
-  
-I have some more project to `systemd`'emonize.  
-This one is my trainig. So doc is a bit more exhaustive.  
-
-When the stuff in this dir is working in the end, the "old" `cron` based `watchdog.sh` might well go away.  
-
-
 ## How it Works
 
+demon management implements systemd service interface.
+
+we have two distinct demons in this setup:
+* `./USR-SDM-Poller.pl` , read over USR-TCP ....
+* `./infini-SDM-MODBUS-sniffer.pl` --- SysV Message queue --->   `./mqsv-SDM2rrd.pl`  
+
+We keep the service interface in distinct directories `setupUSR` and `setupInfiniSniff`.  
+The associated service names are
+* sdmUSRpoller.service
+* sdmInfini.service
+
+## common issues
+
+(the figures are chosen at setup / early testing time and may vary due to tuning)
 
 ### `my_configure.pl`
-... is expanding itself into `guntamatic.service`, `install.sh`, `cleanup.sh`.  
+... is expanding itself into `foobar.service`, `install.sh`, `cleanup.sh`.  
 No special makefile magic, just plain heredocs and some variable substitution.  
 
 ### `cleanup.sh`
@@ -56,10 +47,10 @@ and performs the required `systemctl` acrobatic.
 Don't like it? Don't trust me? Different configurations?  
 Do it manually!
 
-### `guntamatic.service`
+### `foobar.service`
 ... is the **unit file** where `systemd magic` starts off.  
 `man systemd.service` might be a good start to rtfM.  
-`/etc/systemd/system/guntamatic.service` might be a good place for it on recent `systemd` debian.  
+`/etc/systemd/system/foobar.service` might be a good place for it on recent `systemd` debian.  
 'works for me', at least.
 
 Important deviations from minimalistic `systemd` howto-templates:  
@@ -67,7 +58,7 @@ Important deviations from minimalistic `systemd` howto-templates:
 #### `Type=notify` 
 says that the `systemd` wait until **we report** succesful start.  
 I let the watchdog do this, and only if it finds recent rrd updates.  
-So, if anything goes wrong (software, LAN, cauldron, power ,....) we are not able to start the demon.  
+So, if anything goes wrong (software, LAN, gadget_under_test,  power ,....) we are not able to start the demon.  
 I think this is OK in a stable environment.  
 
 #### `NotifyAccess=all` 
@@ -80,7 +71,7 @@ We go with that. No need for paranoia here.
 ... are real advantages compared to `cron`. Knowing who and where is coming makes live much easier.  
 #### `ExecStart=` 
 is the (full) path to our `start.sh`.  
-#### `SyslogIdentifier=guntamatic-logger`
+#### `SyslogIdentifier=foobar-logger`
  since all `STDERR` goes to `/var/log/syslog`, we want to have tagged it with a mnemonic string for easy read and grep.
 For the rest, see the watchdoc section.
 
@@ -110,19 +101,15 @@ If the **last update is younger than `gracetime`**, anything is assumed to **wor
 This finding is reported to `systemd` by issueing **`systemd-notify 'WATCHDOG=1'`**.  
 
 The first time such a succesful update is found, an extra **`"systemd-notify 'READY=1'`** is reported before.  
-Due to the matching **`Type=notify`** clause in the unit file this is when `systemd` considers our **`guntamatic.service`** successfully **up and running**.  
-When we call eg `sudo systemctl start guntamatic.service`, this call will block until systemd receives this `READY=1` -   
+Due to the matching **`Type=notify`** clause in the unit file this is when `systemd` considers our **`foobar.service`** successfully **up and running**.  
+When we call eg `sudo systemctl start foobar.service`, this call will block until systemd receives this `READY=1` -   
 until `TimeoutStartSec=180` is over or the impatient user hits <^C>.  
 
 If anything ist fine, this is just a matter of seconds.  
 This is why I added some test polling rate `$loopt_onfail`  to speed up detection of succesful start.  
 
 ## watchdog timing
-We query our caouldron twice a minute add odd times, but log it with time rounded down to whole minutes.  
-So, every minute, at sec 23 (in my test setting), we get new values, which, however, are already valued as 23 s old.  
-The next value is not earlier than at second 83. Thus, `$gracetime = 120` allow for just one missing read.  
-In a crowded, instable environment, this may be too short and trigger unnecessary restarts.  
-Be prudent and watch log files.  
+... may depend on the time pattern the foo-bar-gadeget-under-surveillance ist queried.  
 
 Provided succesful logging, the watchdog reports 'no need to worry' aka `WATCHDOG=1` every `$looptime = 20`seconds. 
 
@@ -133,16 +120,25 @@ So this adds up to `gracetime`.
 Once restart is triggered, `SIGTERM` is sent to all process in `KillMode=control-group`, i.e. the logger, the watchdog and maybe some subshelled cmd line spawns. If there are still undeads after `TimeoutStopSec=30`, they are hit by `SIGQUIT`.  
   
 After another `RestartSec=20` systemd tries to start afreash again.  
-Nothing special, but simple and tested.  
-Oh had I only tried this before writing my `watchdog.sh`....
 
-There may be some default limit and retry slow down values.  
-I did not want to screw my system to produce test cases.  
-But may be, when the cauldron or the LAN returns back to service after some extended downtime, it may take some time or even manual action to bring loggin up again.
-Just to keep in mind....
 
-  
+## specific issues
 
+### `setupUSR`  
+implementing `sdmUSRpoller.service`  
+for demon  `./USR-SDM-Poller.pl` and its associated babysitter `../watchdogUSR_systemd.pl`
+
+The list of counters to be polled is assembled at watchdog start (i.e. at demon start) from the currently valid configuration.  
+So I hope proper changes in config will keep stuff in sync.   
+... well, as long as there is only 
+* one MODBUS for them
+* one USR-TCP-device
+* one `$bustag = 'tcp-241'`  
+
+If I ever add a second bus, I might simply duplicate stuff with a different bustag.  
+May be even for the third bus.  
+But if I ever happen to configure dozens of them, I think it is time to fork the code and add another layer of config expansion.  
+If you happen to do so for your multinational company, don't forget to pay me my due beer once we met :-)
 
 
 
