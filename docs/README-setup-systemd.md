@@ -140,8 +140,41 @@ May be even for the third bus.
 But if I ever happen to configure dozens of them, I think it is time to fork the code and add another layer of config expansion.  
 If you happen to do so for your multinational company, don't forget to pay me my due beer once we met :-)
 
+### `setupInfiniSniff`
 
+#### two logic busses
+... a challenge that hits me earlier as expected:  
+The infini bus is configured as two distinct busses:
+* `MODBUS-infini` referring to pure passive sniffing
+* `MODBUS-hack` referring to readouts acquired by injecting own commands into the idle periods  
+  
+Reason: This is not yet testet under harsh production condititions, so we may need to revert.  
+  
+In consequnce we have to combine two (skd of logical) bus tags for one physical bus:  
+`my @bustags = qw ( MODBUS-infini MODBUS-hack  );`  
 
+#### two processes
+We have a sender and a reader on the message queue, so we have to start them both.  
+We did this already in the `cron` environment, so nothing new, still massive simplifaication.  
+We kept the setting with distinct logs for couter bus errors and system errors.  
+
+#### ...plus a babysitter
+
+... so this is what it looks like when correctly brought up:
+```
+   CGroup: /system.slice/sdmInfini.service
+           ├─31624 /bin/bash /home/whoever/eastron_SDM/mySDMpoller/setupInfiniSniff/start.sh
+           ├─31626 /usr/bin/perl ./watchdogInfini_systemd.pl
+           ├─31627 /usr/bin/perl ./mqsv-SDM2rrd.pl
+           └─31659 /usr/bin/perl ./infini-SDM-MODBUS-sniffer.pl
+```
+
+#### cleaning up the message queue
+... is performed by calling a slightly modified version of `mqsv-cleanup-systemd.pl`  
+by a `ExecStopPost=$setup_dir/mqsv-cleanup-systemd.pl` stanza.  
+
+Since probably systemd already killed the users of the queue, we reduced the sleep times.  
+May be it were even possible to leave the queue untouched, but , well, hm, ....
 
 
 
