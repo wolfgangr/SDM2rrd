@@ -19,9 +19,9 @@ cd ..
 # echo $PATH
 # pwd
 # launch the real thing
-./USR-SDM-Poller.pl 2>> $UPDLOG 1>> /dev/null   &
+./USR-SDM-Poller.pl 2>> $UPDLOG 1>> /dev/null   # &
 
 
 # don' return to systemd, this breaks `notify` setting 
-sleep infinity
+# sleep infinity
 
