@@ -85,7 +85,7 @@ while (1) {
 		my $age = time() - $last;
 		if ( $age > $gracetime ) {
 			$overdue_cnt++;
-			printf( $logstring, sprintf( " file %s overdue - age = %d ", $rrdfile, $age) )  ;
+			# printf( $logstring, sprintf( " file %s overdue - age = %d ", $rrdfile, $age) )  ;
 
 		}
 	}
@@ -98,7 +98,7 @@ while (1) {
 			$started = 1;	
 		}
 		# rint "WATCHDOG: $sd_notify_WD \n";
-		printf $logstring, $sd_notify_WD ;
+		# printf $logstring, $sd_notify_WD ;
 		system  $sd_notify_WD;
 		sleep $looptime;
 	} else {

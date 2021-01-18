@@ -14,7 +14,7 @@ use strict;
 use Cwd qw();
 
 
-my $servicename = "guntamatic";
+my $servicename = "sdmUSRpoller";
 my $unit_dir = "/etc/systemd/system";  # this is OK for debian, on other systems this may vary
 
 my $unit_file = "$servicename.service";
@@ -60,29 +60,23 @@ EOF_INSTALLER
 my $unit_file_template = << "EOF_UF_TPL";
 #  see man systemd.service — Service unit configuration
 [Unit]
-Description=Guntamatic data logger 
+Description=SDM data logger over USR-TCP bus tcp-241 
 
 Wants=network.target
 After=syslog.target network-online.target
 
 [Service]
 Type=notify
-# NotifyAccess=exec
 NotifyAccess=all
 User=$username
-WorkingDirectory=$setup_dir
-# Type=simple
-# Type=forking
-# ExecStartPost= ... watchdog???
+WorkingDirectory=$setup_dir/
+# ExecStartPre=$base_dir/watchdogUSR_systemd.pl & 
 ExecStart=$setup_dir/start.sh
-# ExecStart=$base_dir/log2rrd.pl
-SyslogIdentifier=guntamatic-logger
+SyslogIdentifier=sdmUSR-logger
 Restart=on-failure
 RestartSec=20
 TimeoutStartSec=180
 WatchdogSec=60
-# man systemd.kill — Process killing procedure configuration
-# KillMode=process
 KillMode=control-group
 TimeoutStopSec=30
 

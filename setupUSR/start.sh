@@ -5,14 +5,12 @@
 SCRIPTDIR=`dirname "$0"`
 # echo $SCRIPTDIR
 cd $SCRIPTDIR
+cd ..
 
 # spawn our associated babysitter
-./watchdog.pl &
+./watchdogUSR_systemd.pl &
 
 # not sure what environment we get from systemd
-# echo $PATH
-# pwd
-cd ..
 # source /etc/profile
 # source ~/.profile
 # echo $PATH
