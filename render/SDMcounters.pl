@@ -213,9 +213,9 @@ for my $target (@targets) {
     . sprintf ("--end\n%s\n" ,     $numend ) 
   ;
 
-  $rrdg_string .=  sprintf ("--step\n%s\n" ,    param('res')) if param('res' );
-  $rrdg_string .=  sprintf  sprintf ("--width\n%s\n" ,   param('width')) if param('width') ;
-  $rrdg_string .=  sprintf  sprintf ("--height\n%s\n" ,  param('height')) if param('height') ;
+  $rrdg_string .=  sprintf ("--step\n%s\n" ,    scalar param('res') )    if (param('res' ));
+  $rrdg_string .=  sprintf ("--width\n%s\n" ,   scalar param('width') )  if (param('width')) ;
+  $rrdg_string .=  sprintf ("--height\n%s\n" ,  scalar param('height') ) if (param('height')) ;
 
    $rrdg_string .=  "--imgformat=PNG\n"
     . "--interlaced\n"
