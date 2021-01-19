@@ -104,7 +104,8 @@ sub subs_quality_spec {
 	}
 
 	# cdef for cos phi
-	for my $P ( qw ( 1 2 3  ) ) {
+	push @rvs, 'CDEF:def_Ptot=def_P1,def_P2,def_P3,+,+';
+	for my $P ( qw ( 1 2 3 tot ) ) {
 		#
 		##  
 		my $rpn = sprintf ('def_P%s,DUP,DUP,*,def_VAr%s,DUP,*,+,SQRT,/,100,*', $P , $P )  ;
