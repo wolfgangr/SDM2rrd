@@ -35,9 +35,28 @@ for my $cnt ( grep { /subs\d/ }  keys %counterlist ) {
 
 # replace the static rrd-graph files
 # @tail_lines = graph_spec ($counter, $template) 
+sub graph_spec {
+	my ($counter, $template) = @_ ;
+	my @rvs;
+
+	@rvs = rrdg_lines_ary ($rrd_tpl_mains_stacked);
+	return @rvs;
+}
 
 
+# filter rrd graph lines
+# perfrom bash style space and \ stripping
+# @lines ( $textblock)
+sub rrdg_lines_ary {
+	my $input = shift;
+	# my @result;
+
+       return 
+	       grep { $_ } map 
+	       		{ /^\s*(\S.*[^\s\\])\s*\\?\s*$/ ; $1  } 
+			split '\n',  $input ;
 
 
+}
 
 1;
