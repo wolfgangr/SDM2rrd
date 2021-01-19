@@ -96,6 +96,22 @@ sub subs_quality_spec {
 	   }
 	}
 
+        for my $P ( qw ( 1 2 3 tot ) ) {
+            for my $prm ( qw ( thdI thdU )) {
+		my $clr_idx = ($P eq 'tot') ? 'total' : 'L'.$P ; # color index
+		my $dashing =  ($prm eq 'thdI' ) ? '1,2' :  '5,6'  ; 
+		my $label = sprintf "%s (%s)", $prm, $P;
+		my $indextag = $prm.$P ;
+
+                my $ln = sprintf "LINE1:def_%s#%s:%s:dashes=%s",  $indextag  , 
+                        $counter_default_colors{ $clr_idx  },  
+			$label, $dashing ;
+			# $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $ln ;
+	    }
+	}
+
+
 
 	# zero line
 	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
