@@ -45,8 +45,8 @@ my %counter_default_colors = (
 	subs5 => 'FF0000', 
 	subs6 => '00FF00', 
 	L1 => 'FF0000' ,
-	L2 => '00cc00' ,
-	L3 => '0000dd' ,
+	L2 => '0000ff' ,
+	L3 => '00bb00' ,
         total => '000000',	
 ) ;
 
@@ -61,13 +61,10 @@ sub graph_spec {
 	my ($counter, $template) = @_ ;
 	my @rvs;
 
-	if ($counter eq 'mains' and  $template eq 'm_stacked' ) {
-		return main_area_spec(  @subs_counters ) ;
-	}
-
-        if ($counter eq 'mains' and  $template eq 'm_lined' ) {
-                return main_line_spec(  @subs_counters ) ;
-        }
+	if ($counter eq 'mains' and  $template eq 'm_stacked' )    { return main_area_spec(  @subs_counters ) ; }
+        if ($counter eq 'mains' and  $template eq 'm_lined' ) 	   { return main_line_spec(  @subs_counters ) ; }
+	if ( $template eq 'power') 	{ return subs_power_spec ($counter) ; }	
+	 
 
 	# @rvs = rrdg_lines_ary ($rrd_tpl_mains_stacked);
 	# return @rvs;
@@ -76,6 +73,60 @@ sub graph_spec {
 	return dummy_spec() ;
 }
 
+sub subs_power_spec {
+ 	my $counter = shift;
+
+        my @rvs;
+        push @rvs, '--title=Verbrauch pro Zweig' ;
+        # push @rvs, '--upper-limit=20000';
+	# push @rvs, '--lower-limit=-0.5';
+	# push @rvs, '--rigid';
+	push @rvs, 'TEXTALIGN:left';
+
+	# DS
+	for my $P ( qw ( tot ) ) {
+		my $fn = sprintf $rrd_printf, $counter, 'totalP';
+                my $def = sprintf "DEF:def_Ptot=%s:Ptot:AVERAGE",  ,$fn;
+                push @rvs, $def;
+	}
+        for my $P ( qw ( 1 2 3 ) ) {
+                my $fn = sprintf $rrd_printf, $counter, 'elbasics';
+                my $def = sprintf "DEF:def_P%s=%s:P%s:AVERAGE", $P ,$fn, $P;
+                push @rvs, $def;
+        }
+
+
+        # revert direction if required
+        for my $P ( qw( 1 2 3 tot)  ) {
+                my $dir = $counterlist{ $counter }->{ direction } ;
+		# my $rpn = '1000,/,' . $dir . ',*,' ;
+		my $rpn =  $dir . ',*,' ;
+                my $cdef = sprintf "CDEF:cdef_P%s=def_P%s,%s", $P, $P, $rpn  ;
+                push @rvs, $cdef;
+        }
+
+	# Area per Phase
+        for my $P ( qw ( 1 2 3 )  ) {
+		# my $Plabel = 'P' . $P ;
+                my $area = sprintf "AREA:cdef_P%s#%s:%s:STACK",  $P ,
+                        $counter_default_colors{  "L$P"}, "P(L$P)"  ;
+			# $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $area ;
+        }
+
+	# line for phase total
+        for my $P ( qw ( tot )  ) {
+                # my $Plabel = 'P' . $P ;
+                my $area = sprintf "LINE2:cdef_P%s#%s:%s",  $P ,
+                        $counter_default_colors{ 'total'  }, "P gesamt"  ;
+                        # $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $area ;
+        }
+
+
+	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+	return @rvs;
+}
 
 sub main_line_spec {
 
