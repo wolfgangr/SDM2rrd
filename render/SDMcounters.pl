@@ -206,7 +206,7 @@ if ( param('shift_ll')) {
 for my $target (@targets) {
   my $rrdg_img = sprintf "%s/%s.png", $tmpdir, $target ;
   my $rrdg_def = sprintf "./%s.rrd-graph",  $target ;
-  my $rrdg_tail = `cat $rrdg_def` ;
+  # my $rrdg_tail = `cat $rrdg_def` ;
 
   my $rrdg_string = sprintf ("%s\n" , $rrdg_img)
     . sprintf ("--start\n%s\n" ,   $numstart )
@@ -219,12 +219,15 @@ for my $target (@targets) {
 
    $rrdg_string .=  "--imgformat=PNG\n"
     . "--interlaced\n"
-    . $rrdg_tail
+    # . $rrdg_tail
   ;
 
   my @rrdg_array = split '\n', $rrdg_string;
 
-  # DEBUG (@rrdg_array );
+  my @tail = graph_spec ($selected, $target);
+  push @rrdg_array ,  @tail ;
+
+  debug (\@rrdg_array, $selected, $target );
 
   # my ($result_arr,$xsize,$ysize)  = RRDs::graph($rrdg_string);
   my $res_hash = RRDs::graphv( @rrdg_array  );
