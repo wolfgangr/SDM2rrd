@@ -35,14 +35,25 @@ our @targets = @{$target_h{ main }} ;
 
 my @counter_tags_sorted = sort keys %counterlist ;
 
-my $navigator ='';
+my $navigator = "\n" ;
+# $navigator .=  start_form  ;
 for my $cnt (@counter_tags_sorted) {
-	$navigator .= $cnt . '-> ';
-	$navigator .= $counterlist{ $cnt }->{ Label } ;
-	$navigator .=  "\n";
+	# $navigator .= $cnt . '-> ';
+	# $navigator .= $counterlist{ $cnt }->{ Label } ;
+	# $navigator .=  "\n";
+	# $navigator .= submit( -name=> $cnt , -value=> $counterlist{ $cnt }->{ Label } , -size=>1   ),
+	# $navigator .= sprintf '<input type="radio" id="%s" name="select" value="%s">' , $cnt , $cnt ;
+	# $navigator .= sprintf '<label for="%s">%s</label>',  $cnt , $counterlist{ $cnt }->{ Label } ;
+	$navigator .= sprintf '<button type="submit" name="select" value="%s">' , $cnt ;
+	$navigator .= '<b>' ;
+	$navigator .=  $counterlist{ $cnt }->{ Label } ;
+	$navigator .= '</b>' ;
+	$navigator .= '</button>' ; 
+
+	$navigator .= " \n" ;
 
 }
-
+# $navigator .=  end_form  . "\n" ;  
 
 
 
@@ -221,6 +232,12 @@ print header,
 	"\n<tr><td colspan=999><hr></td></tr>\n", 
   ;
 
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  print "<tr><td colspan=999>";
+  print $navigator;
+  print "</td></tr>\n" ;
+  print "<tr><td colspan=999><hr></td></tr>\n" ; 
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 	# start_form,
 print "\n<tr><td>" ,
         submit (-name=>'load', -value=>'Laden'),
@@ -260,7 +277,7 @@ print
         "H:",textfield(-name=>'height' ,
                 -default=>'140',  -size=>1   ),
 	
-	"</tid></tr>" , end_form, #, "</table>\n",
+	"</td></tr>" , end_form, #, "</table>\n",
 	# end_form,
   ;
 print "\n<tr><td colspan=999><hr></td></tr>\n";
