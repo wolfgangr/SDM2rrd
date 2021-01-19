@@ -94,13 +94,13 @@ sub main_area_spec {
 	}
 	
 	for my $cnt (@_) {
-		my $area = sprintf "AREA:cdef_%s#%s:%s", $cnt,
-			$counter_default_colors{ $cnt } , 'XYZ' ;
-			# $counterlis{ $cnt }->{ label } ;
+		my $area = sprintf "AREA:cdef_%s#%s:%s:STACK", $cnt,
+			$counter_default_colors{ $cnt } ,
+			$counterlist{ $cnt }->{ Label } ;
 		push @rvs, $area ;
 	}
 	for my $cnt ('mains_d') {
-		my $line = sprintf "LINE:cdef_%s#%s:%s", $cnt,
+		my $line = sprintf "LINE3:cdef_%s#%s:%s", $cnt,
 			$counter_default_colors{ $cnt } , 'Gesamt' ;
 		push @rvs, $line ;
 	}
