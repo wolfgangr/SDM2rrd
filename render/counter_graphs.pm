@@ -59,14 +59,66 @@ sub graph_spec {
 
 	if ($counter eq 'mains' and  $template eq 'm_stacked' ) {
 		return main_area_spec(  @subs_counters ) ;
-		# return dummy2_spec() ;
 	}
+
+        if ($counter eq 'mains' and  $template eq 'm_lined' ) {
+                return main_line_spec(  @subs_counters ) ;
+        }
+
 	# @rvs = rrdg_lines_ary ($rrd_tpl_mains_stacked);
 	# return @rvs;
 	#
 	# ... if (noting ( else )) { ....
 	return dummy_spec() ;
 }
+
+
+sub main_line_spec {
+
+        my @rvs;
+        push @rvs, '--title=Verbrauch pro Zweig' ;
+        # push @rvs, '--upper-limit=20000';
+        push @rvs, '--lower-limit=-0.5';
+        push @rvs, '--rigid';
+
+	# Nullinie
+	# push @rvs, 'LINE1:0#000000';
+
+        # DEF
+        for my $cnt ( 'mains_d', @_) {
+                my $fn = sprintf $rrd_printf, $cnt, 'totalP';
+                my $def = sprintf "DEF:def_%s=%s:Ptot:AVERAGE", $cnt ,$fn;
+                push @rvs, $def;
+        }
+
+        # revert direction if required
+        for my $cnt ('mains_d' , @_) {
+                my $dir = $counterlist{ $cnt }->{ direction } ;
+                my $rpn = '1000,/,' . $dir . ',*,' ;
+                my $cdef = sprintf "CDEF:cdef_%s=def_%s,%s", $cnt, $cnt, $rpn  ;
+                push @rvs, $cdef;
+        }
+        
+        # thin lines 
+        for my $cnt (@_) {
+                my $area = sprintf "LINE1:cdef_%s#%s:%s", $cnt,
+                        $counter_default_colors{ $cnt } ,
+                        $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $area ;
+        }
+
+        # mains LINE
+        for my $cnt ('mains_d') {
+                my $line = sprintf "LINE3:cdef_%s#%s:%s", $cnt,
+                        $counter_default_colors{ $cnt } , 'Gesamt' ;
+                push @rvs, $line ;
+        }
+
+	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+
+        return @rvs ;
+}
+
 
 
 # 
@@ -76,7 +128,7 @@ sub main_area_spec {
 	my @rvs;
 	push @rvs, '--title=Verbrauch Summe' ;
 	# push @rvs, '--upper-limit=20000';
-	push @rvs, '--lower-limit=-500';
+	push @rvs, '--lower-limit=-0.5';
 	push @rvs, '--rigid';
 
 	# DEF
@@ -92,9 +144,10 @@ sub main_area_spec {
 		# my $rpn = '';
 		# if ( defined ( my $dir = $counterlist{ $cnt }->{ direction }) ) {
 		my $dir = $counterlist{ $cnt }->{ direction } ;
-		my $rpn = ',' . $dir . ',*' ;
+		my $rpn = '1000,/,' . $dir . ',*,' ;
+		# ',' . $dir . ',*' ;
 		#}
-		my $cdef = sprintf "CDEF:cdef_%s=def_%s%s", $cnt, $cnt, $rpn  ;
+		my $cdef = sprintf "CDEF:cdef_%s=def_%s,%s", $cnt, $cnt, $rpn  ;
 		push @rvs, $cdef;
 	}
 	
@@ -113,7 +166,7 @@ sub main_area_spec {
 		push @rvs, $line ;
 	}
 
-
+	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
 	return @rvs ;
 }
 
