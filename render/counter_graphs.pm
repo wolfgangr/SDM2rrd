@@ -80,9 +80,9 @@ sub subs_quality_spec {
 
         my @rvs;
         push @rvs, '--title=Störungsanalyse - ' .  $counterlist{ $counter }->{ Label }  ;
-        # push @rvs, '--upper-limit=20000';
-        # push @rvs, '--lower-limit=-0.5';
-        # push @rvs, '--rigid';
+        push @rvs, '--upper-limit=120';
+        push @rvs, '--lower-limit=-30';
+        push @rvs, '--rigid';
         push @rvs, '--vertical-label=wtf';
         push @rvs, 'TEXTALIGN:left';
 
@@ -96,10 +96,28 @@ sub subs_quality_spec {
 	   }
 	}
 
+	# retrieve power to calculate cos phi aka power factor
+	for my $P ( qw ( 1 2 3 ) ) {
+		my $fn = sprintf $rrd_printf, $counter, 'elbasics' ;
+		my $def = sprintf "DEF:def_P%s=%s:P%s:AVERAGE", $P, $fn , $P    ;
+		push @rvs, $def;
+	}
+
+	# cdef for cos phi
+	for my $P ( qw ( 1 2 3  ) ) {
+		#
+		##  
+		my $rpn = sprintf ('def_P%s,DUP,DUP,*,def_VAr%s,DUP,*,+,SQRT,/,100,*', $P , $P )  ;
+		my $cdef = sprintf "CDEF:def_cosphi%s=%s", $P ,$rpn   ;
+		push @rvs, $cdef;
+	}
+
+	# 
+	
         for my $P ( qw ( 1 2 3 tot ) ) {
             for my $prm ( qw ( thdI thdU )) {
 		my $clr_idx = ($P eq 'tot') ? 'total' : 'L'.$P ; # color index
-		my $dashing =  ($prm eq 'thdI' ) ? '1,2' :  '5,6'  ; 
+		my $dashing =  ($prm eq 'thdI' ) ? '3,2' :  '1,4'  ; 
 		my $label = sprintf "%s (%s)", $prm, $P;
 		my $indextag = $prm.$P ;
 
