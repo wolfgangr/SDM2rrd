@@ -3,9 +3,9 @@
 use Cwd();
 
 # all the heredocs 
-our $rrd_tpl_mains_stacked;
-our $rrd_tpl_mains_lined;
-require './counter_graph_templates.pm';
+# our $rrd_tpl_mains_stacked;
+# our $rrd_tpl_mains_lined;
+# require './counter_graph_templates.pm';
 
 
 $rrdpath = Cwd::realpath ( '../rrd');
@@ -44,6 +44,10 @@ my %counter_default_colors = (
 	subs4 => 'FFD700', 
 	subs5 => 'FF0000', 
 	subs6 => '00FF00', 
+	L1 => 'FF0000' ,
+	L2 => '00cc00' ,
+	L3 => '0000dd' ,
+        total => '000000',	
 ) ;
 
 
@@ -173,12 +177,25 @@ sub main_area_spec {
 #~~~~~~~~~~~~~~~~~~~~ helper subs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 sub dummy_spec {
-	return rrdg_lines_ary ($rrd_tpl_mains_stacked);
+	# return rrdg_lines_ary ($rrd_tpl_mains_stacked);
+        my @rvs;
+        push @rvs, '--title=Dummy 1' ;
+	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+	push @rvs, 'LINE3:1#FF0000::dashes=3,3';
+
+        return @rvs ;
 }
 
 
 sub dummy2_spec {
-        return rrdg_lines_ary ($rrd_tpl_mains_lined);
+	# return rrdg_lines_ary ($rrd_tpl_mains_lined);
+        my @rvs;
+        push @rvs, '--title=Dummy 2' ;
+        push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+        push @rvs, 'LINE3:-1#00ff00::dashes=3,5';
+
+        return @rvs ;
+
 }
 
 
