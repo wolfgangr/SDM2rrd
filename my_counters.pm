@@ -57,19 +57,19 @@ $Counterlist{'subs1'} = {
 $Counterlist{'subs2'} = {
         bus => 'tcp-241',
         ID =>  2,
-        Label => 'Stall + Werkstatt',
+        Label => 'Wohnhaus alt',
 };
 
 $Counterlist{'subs3'} = {
         bus => 'tcp-241',
         ID =>  3,
-        Label => 'Wohnhaus alt',
+        Label => 'Kartoffellager',
 };
 
 $Counterlist{'subs4'} = {
         bus => 'tcp-241',
         ID =>  4,
-        Label => 'Kartoffellager',
+        Label => 'Stall + Werkstatt',
 };
 
 $Counterlist{'subs5'} = {
