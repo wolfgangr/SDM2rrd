@@ -8,13 +8,48 @@ use CGI qw/:standard/;
 use Data::Dumper ;
 use RRDs ;
 use utf8;
+use Storable;
 
 our $dtformat = '+\'%d.%m.%Y %T\'' ; # datetime format string for console `date`
 our $RRDdtf = "+\'%d.%m.%Y %H:%M\'" ; # RRD does not like seconds here 
 our $title = "Stromzähler @" . `hostname -f` ;
 our $tmpdir= "./tmp" ; 
-our @targets = qw ( INFINI-pwr INFINI-batt INFINI-volts );
+our $counterlist_f = './counterlist.dat';
+# our @targets = qw ( INFINI-pwr INFINI-batt INFINI-volts );
 
+our %counterlist;
+my $clp = Storable::retrieve( $counterlist_f ); 
+%counterlist = %$clp;
+
+
+my @target_any = qw ( power energy basics quality ) ;
+our %target_h = (
+	main  => [ qw ( m_stacked m_lined flow energy )  ] ,
+	details => [  @target_any ] ,
+	subs1 =>  \@target_any , 
+	subs6 =>  \@target_any ,
+) ;
+# my @sel_sorted = qw (   main details subs1 subs2 subs3 subs4 subs5 subs6 );
+# my @sel_labels = [ 'Hauptanschluss  '  ] ;
+our @targets = @{$target_h{ main }} ;
+
+my @counter_tags_sorted = sort keys %counterlist ;
+
+my $navigator ='';
+for my $cnt (@counter_tags_sorted) {
+	$navigator .= $cnt . '-> ';
+	$navigator .= $counterlist{ $cnt }->{ Label } ;
+	$navigator .=  "\n";
+
+}
+
+
+
+
+debug (  \%target_h ,  \@targets, \%counterlist , $navigator ) ;
+
+# DEBUG (  $target_h{ main } );
+# DEBUG (  $target_h->{ main } );
 
 # calculate interval:
 # try to parse rrd AT notation
