@@ -81,7 +81,7 @@ sub subs_quality_spec {
         my @rvs;
         push @rvs, '--title=Störungsanalyse - ' .  $counterlist{ $counter }->{ Label }  ;
         push @rvs, '--upper-limit=120';
-        push @rvs, '--lower-limit=-30';
+        push @rvs, '--lower-limit=-120';
         push @rvs, '--rigid';
         push @rvs, '--vertical-label=Prozent';
         push @rvs, 'TEXTALIGN:left';
@@ -108,7 +108,7 @@ sub subs_quality_spec {
 	for my $P ( qw ( 1 2 3 tot ) ) {
 		#
 		##  
-		my $rpn = sprintf ('def_P%s,DUP,DUP,*,def_VAr%s,DUP,*,+,SQRT,/,100,*', $P , $P )  ;
+		my $rpn = sprintf ('def_VAr%s,DUP,DUP,*,def_P%s,DUP,*,+,SQRT,/,100,*', $P , $P )  ;
 		my $cdef = sprintf "CDEF:def_cosphi%s=%s", $P ,$rpn   ;
 		push @rvs, $cdef;
 	}
@@ -139,6 +139,8 @@ sub subs_quality_spec {
 
 	# zero line
 	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+	push @rvs, 'LINE1:100#000000::dashes=1,4,5,4';
+	push @rvs, 'LINE1:-100#000000::dashes=1,4,5,4';
         return @rvs ;
 
 
