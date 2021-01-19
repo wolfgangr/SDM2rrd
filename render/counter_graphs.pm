@@ -83,7 +83,7 @@ sub subs_quality_spec {
         push @rvs, '--upper-limit=120';
         push @rvs, '--lower-limit=-30';
         push @rvs, '--rigid';
-        push @rvs, '--vertical-label=wtf';
+        push @rvs, '--vertical-label=Prozent';
         push @rvs, 'TEXTALIGN:left';
 
 	# DS
@@ -116,13 +116,18 @@ sub subs_quality_spec {
 	# 
 	
         for my $P ( qw ( 1 2 3 tot ) ) {
-            for my $prm ( qw ( thdI thdU )) {
+            for my $prm ( qw ( thdI thdU cosphi )) {
 		my $clr_idx = ($P eq 'tot') ? 'total' : 'L'.$P ; # color index
-		my $dashing =  ($prm eq 'thdI' ) ? '3,2' :  '1,4'  ; 
-		my $label = sprintf "%s (%s)", $prm, $P;
+
+		# my $dashing =  ($prm eq 'thdI' ) ? '3,2' :  '1,4'  ; 
+		my $dashing = '';   ':dashes'  ;
+		$dashing .= ':dashes=3,2' if ($prm eq 'thdI' );
+		$dashing .= ':dashes=1,4' if ($prm eq 'thdU' );
+
+		my $label = sprintf "%s(%s)", $prm, $P;
 		my $indextag = $prm.$P ;
 
-                my $ln = sprintf "LINE1:def_%s#%s:%s:dashes=%s",  $indextag  , 
+                my $ln = sprintf "LINE1:def_%s#%s:%s%s",  $indextag  , 
                         $counter_default_colors{ $clr_idx  },  
 			$label, $dashing ;
 			# $counterlist{ $cnt }->{ Label } ;
