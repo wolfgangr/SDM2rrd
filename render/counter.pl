@@ -35,19 +35,23 @@ our @targets = @{$target_h{ main }} ;
 
 my @counter_tags_sorted = sort keys %counterlist ;
 
+# debug (sprintf ("param select: >%s<\n", param('select') ));
+
+my $selected = (param('select') ) ?  param('select') : 'mains' ;
+
+# debug (sprintf ("\$selected: >%s<\n", $selected  ));
+
+
 my $navigator = "\n" ;
 # $navigator .=  start_form  ;
 for my $cnt (@counter_tags_sorted) {
-	# $navigator .= $cnt . '-> ';
-	# $navigator .= $counterlist{ $cnt }->{ Label } ;
-	# $navigator .=  "\n";
-	# $navigator .= submit( -name=> $cnt , -value=> $counterlist{ $cnt }->{ Label } , -size=>1   ),
-	# $navigator .= sprintf '<input type="radio" id="%s" name="select" value="%s">' , $cnt , $cnt ;
-	# $navigator .= sprintf '<label for="%s">%s</label>',  $cnt , $counterlist{ $cnt }->{ Label } ;
+	# active selection is marked bold
+	my $nav_printf = ( $selected ne $cnt ) ? '%s' : '<b>%s</b>' ;
+
 	$navigator .= sprintf '<button type="submit" name="select" value="%s">' , $cnt ;
-	$navigator .= '<b>' ;
-	$navigator .=  $counterlist{ $cnt }->{ Label } ;
-	$navigator .= '</b>' ;
+	# $navigator .= '<b>' ;
+	$navigator .=  sprintf $nav_printf ,  $counterlist{ $cnt }->{ Label } ;
+	# $navigator .= '</b>' ;
 	$navigator .= '</button>' ; 
 
 	$navigator .= " \n" ;
@@ -57,7 +61,7 @@ for my $cnt (@counter_tags_sorted) {
 
 
 
-debug (  \%target_h ,  \@targets, \%counterlist , $navigator ) ;
+# debug (  \%target_h ,  \@targets, \%counterlist , $navigator ) ;
 
 # DEBUG (  $target_h{ main } );
 # DEBUG (  $target_h->{ main } );
