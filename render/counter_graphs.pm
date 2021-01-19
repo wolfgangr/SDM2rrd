@@ -79,26 +79,34 @@ sub main_area_spec {
         push @rvs, '--lower-limit=-500';
         push @rvs, '--rigid';
 
+	# DEF
 	for my $cnt ( 'mains_d', @_) {
 		my $fn = sprintf $rrd_printf, $cnt, 'totalP';
 		my $def = sprintf "DEF:def_%s=%s:Ptot:AVERAGE", $cnt ,$fn;
 		push @rvs, $def;
 	}
 
-	# prelim hack to revert direction
-	# push @rvs,  'CDEF:cdef_subs1=def_subs1',
+	# revert direction if required
 	for my $cnt ('mains_d' , @_) {
 		# my $dcef = sprintf "CDEF:cdef_%s=0,def_%s,-", $cnt, $cnt;
-		my $cdef = sprintf "CDEF:cdef_%s=def_%s", $cnt, $cnt;
+		# my $rpn = '';
+		# if ( defined ( my $dir = $counterlist{ $cnt }->{ direction }) ) {
+		my $dir = $counterlist{ $cnt }->{ direction } ;
+		my $rpn = ',' . $dir . ',*' ;
+		#}
+		my $cdef = sprintf "CDEF:cdef_%s=def_%s%s", $cnt, $cnt, $rpn  ;
 		push @rvs, $cdef;
 	}
 	
+	# stacked AREA s
 	for my $cnt (@_) {
 		my $area = sprintf "AREA:cdef_%s#%s:%s:STACK", $cnt,
 			$counter_default_colors{ $cnt } ,
 			$counterlist{ $cnt }->{ Label } ;
 		push @rvs, $area ;
 	}
+
+	# mains LINE
 	for my $cnt ('mains_d') {
 		my $line = sprintf "LINE3:cdef_%s#%s:%s", $cnt,
 			$counter_default_colors{ $cnt } , 'Gesamt' ;
