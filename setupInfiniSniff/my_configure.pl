@@ -75,7 +75,8 @@ ExecStart=$setup_dir/start.sh
 # cleanup out message queue
 ExecStopPost=$setup_dir/mqsv-cleanup-systemd.pl
 SyslogIdentifier=sdmUSR-logger
-Restart=on-failure
+# Restart=on-failure
+Restart=always
 RestartSec=20
 TimeoutStartSec=180
 WatchdogSec=60

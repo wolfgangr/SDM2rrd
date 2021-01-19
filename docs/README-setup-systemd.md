@@ -204,7 +204,12 @@ Jan 19 00:04:39 kellerkind sdmUSR-logger[6883]: removing message queue
 Jan 19 00:04:39 kellerkind sdmUSR-logger[6883]: ...done.
 Jan 19 00:04:39 kellerkind systemd[1]: sdmInfini.service: Succeeded.
 ```
-Looks like systemd thinks this is intended behaviour. hm. still rtfM on TODO ...
+Looks like systemd thinks this is intended behaviour. hm. still rtfM on TODO ...  
+Ah, still a stanza left from early 'no-clue-whats-going-on'-boilerplates  
+Replace `Restart=on-failure` by `Restart=always` does what it says and what adds understanding to the mentioned tests.  
+Restart, kill jobs, watch logging coming up again, be happy.  
+That's the way undead demons are supposed to behave :-)   
+
 
 
 
