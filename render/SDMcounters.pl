@@ -50,7 +50,7 @@ require './counter_graphs.pm';
 
 my @counter_tags_sorted = sort keys %counterlist ;
 # debug (sprintf ("param select: >%s<\n", param('select') ));
-my $selected = (param('select') ) ?  param('select') : 'mains' ;
+my $selected = (param('select') )  ||    (param('select_previous') )    ||  'mains' ;
 # debug (sprintf ("\$selected: >%s<\n", $selected  ));
 
 my @targets = @{$target_h{ $selected  }} ;
@@ -72,6 +72,8 @@ for my $cnt (@counter_tags_sorted) {
 	$navigator .= " \n" ;
 
 }
+$navigator .= sprintf '<input type="hidden" name="select_previous" value="%s">', $selected ; 
+
 # $navigator .=  end_form  . "\n" ;  
 
 
