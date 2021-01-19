@@ -16,24 +16,24 @@ our $title = "Stromzähler @" . `hostname -f` ;
 our $tmpdir= "./tmp" ; 
 
 # load stored counterlist
-our $counterlist_f = './counterlist.dat';
+# our $counterlist_f = './counterlist.dat';
 # our @targets = qw ( INFINI-pwr INFINI-batt INFINI-volts );
 
-our %counterlist;
-my $clp = Storable::retrieve( $counterlist_f ); 
-%counterlist = %$clp;
+# our %counterlist;
+# my $clp = Storable::retrieve( $counterlist_f ); 
+# %counterlist = %$clp;
 
 # should'nt this better be in central counterlist?
-my @target_any = qw ( power energy basics quality ) ;
-our %target_h = (
-	mains  => [ qw ( m_stacked m_lined flow energy )  ] ,
-	mains_d =>  \@target_any ,
-) ;
+# my @target_any = qw ( power energy basics quality ) ;
+# our %target_h = (
+# 	mains  => [ qw ( m_stacked m_lined flow energy )  ] ,
+# 	mains_d =>  \@target_any ,
+# ) ;
 
 # all subs? counter get the default
-for my $cnt ( grep { /subs\d/ }  keys %counterlist ) {
-	$target_h{ $cnt } = \@target_any ; 
-}
+# for my $cnt ( grep { /subs\d/ }  keys %counterlist ) {
+# 	$target_h{ $cnt } = \@target_any ; 
+# }
 
 # DEBUG (\%target_h ); 
 
@@ -41,12 +41,17 @@ for my $cnt ( grep { /subs\d/ }  keys %counterlist ) {
 # my @sel_labels = [ 'Hauptanschluss  '  ] ;
 # our @targets = @{$target_h{ main }} ;
 
+our %counterlist;
+our %target_h;
+
+require './counter_graphs.pm';
+
 my @counter_tags_sorted = sort keys %counterlist ;
 # debug (sprintf ("param select: >%s<\n", param('select') ));
 my $selected = (param('select') ) ?  param('select') : 'mains' ;
 # debug (sprintf ("\$selected: >%s<\n", $selected  ));
 
-our @targets = @{$target_h{ $selected  }} ;
+my @targets = @{$target_h{ $selected  }} ;
 
 debug (\%target_h, \@targets );
 
