@@ -75,9 +75,9 @@ sub main_area_spec {
 	# $rrd_printf 
 	my @rvs;
 	push @rvs, '--title=Verbrauch Summe' ;
-        push @rvs, '--upper-limit=8000';
-        push @rvs, '--lower-limit=-500';
-        push @rvs, '--rigid';
+	# push @rvs, '--upper-limit=20000';
+	push @rvs, '--lower-limit=-500';
+	push @rvs, '--rigid';
 
 	# DEF
 	for my $cnt ( 'mains_d', @_) {

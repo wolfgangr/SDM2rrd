@@ -5,7 +5,9 @@ use strict ;
   # and echoes back its values.
 
 use CGI qw/:standard/;
-use Data::Dumper ;
+use Data::Dumper; # () ;
+# use Data::Dumper::Simple  ;
+
 use RRDs ;
 use utf8;
 use Storable;
@@ -227,10 +229,11 @@ for my $target (@targets) {
   my @tail = graph_spec ($selected, $target);
   push @rrdg_array ,  @tail ;
 
+  debug ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
   debug (\@rrdg_array, $selected, $target );
 
   # my ($result_arr,$xsize,$ysize)  = RRDs::graph($rrdg_string);
-  my $res_hash = RRDs::graphv( @rrdg_array  );
+  my $res_hash = RRDs::graph( @rrdg_array  );
   $rrds_err = RRDs::error;
   if ($rrds_err) {
     my $rmmsg = `rm $rrdg_img `;
@@ -411,17 +414,18 @@ sub mymodulo {
 # debug with continued laoding
 sub debug {
   print
-    "\n<pre><code>\n",
-    Dumper ( @_), 
-    "\</code></pre>\n",
+    "\n<pre><code>\n" .
+    # Dumper ( @_), 
+    (Data::Dumper::Dumper ( @_)) . 
+    "\</code></pre>\n" 
   ;
 }
 
 # final die like debug
 sub DEBUG {
-    print header,
-    start_html('### DEBUG ###'),
-    debug ( @_) ,
+    print header .
+    start_html('### DEBUG ###') .
+    debug ( @_) .
     end_html
   ;
   exit; # is it bad habit to exit from a sum??  
