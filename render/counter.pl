@@ -14,6 +14,8 @@ our $dtformat = '+\'%d.%m.%Y %T\'' ; # datetime format string for console `date`
 our $RRDdtf = "+\'%d.%m.%Y %H:%M\'" ; # RRD does not like seconds here 
 our $title = "Stromzähler @" . `hostname -f` ;
 our $tmpdir= "./tmp" ; 
+
+# load stored counterlist
 our $counterlist_f = './counterlist.dat';
 # our @targets = qw ( INFINI-pwr INFINI-batt INFINI-volts );
 
@@ -21,26 +23,32 @@ our %counterlist;
 my $clp = Storable::retrieve( $counterlist_f ); 
 %counterlist = %$clp;
 
-
+# should'nt this better be in central counterlist?
 my @target_any = qw ( power energy basics quality ) ;
 our %target_h = (
-	main  => [ qw ( m_stacked m_lined flow energy )  ] ,
-	details => [  @target_any ] ,
-	subs1 =>  \@target_any , 
-	subs6 =>  \@target_any ,
+	mains  => [ qw ( m_stacked m_lined flow energy )  ] ,
+	mains_d =>  \@target_any ,
 ) ;
+
+# all subs? counter get the default
+for my $cnt ( grep { /subs\d/ }  keys %counterlist ) {
+	$target_h{ $cnt } = \@target_any ; 
+}
+
+# DEBUG (\%target_h ); 
+
 # my @sel_sorted = qw (   main details subs1 subs2 subs3 subs4 subs5 subs6 );
 # my @sel_labels = [ 'Hauptanschluss  '  ] ;
-our @targets = @{$target_h{ main }} ;
+# our @targets = @{$target_h{ main }} ;
 
 my @counter_tags_sorted = sort keys %counterlist ;
-
 # debug (sprintf ("param select: >%s<\n", param('select') ));
-
 my $selected = (param('select') ) ?  param('select') : 'mains' ;
-
 # debug (sprintf ("\$selected: >%s<\n", $selected  ));
 
+our @targets = @{$target_h{ $selected  }} ;
+
+debug (\%target_h, \@targets );
 
 my $navigator = "\n" ;
 # $navigator .=  start_form  ;
