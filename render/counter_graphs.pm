@@ -22,7 +22,7 @@ my $clp = Storable::retrieve( $counterlist_f );
 my @subs_counters = grep { /subs\d/ } sort  keys %counterlist ;
 
 # should'nt this better be in central counterlist?
-my @target_any = qw ( power energy basics quality ) ;
+my @target_any = qw ( power  basics energy quality ) ;
 our %target_h = (
         mains  => [ qw ( m_stacked m_lined flow energy )  ] ,
         mains_d =>  \@target_any ,
@@ -64,7 +64,7 @@ sub graph_spec {
 	if ($counter eq 'mains' and  $template eq 'm_stacked' )    { return main_area_spec(  @subs_counters ) ; }
         if ($counter eq 'mains' and  $template eq 'm_lined' ) 	   { return main_line_spec(  @subs_counters ) ; }
 	if ( $template eq 'power') 	{ return subs_power_spec ($counter) ; }	
-	 
+	if ( $template eq 'basics')      { return subs_basics_spec ($counter) ; }	 
 
 	# @rvs = rrdg_lines_ary ($rrd_tpl_mains_stacked);
 	# return @rvs;
@@ -73,14 +73,65 @@ sub graph_spec {
 	return dummy_spec() ;
 }
 
+
+
+
+#-------------------------------------
+sub subs_basics_spec {
+ 	my $counter = shift;
+
+        my @rvs;
+        push @rvs, '--title=Stromaufteilung - ' .  $counterlist{ $counter }->{ Label }  ;
+        # push @rvs, '--upper-limit=20000';
+	# push @rvs, '--lower-limit=-0.5';
+	# push @rvs, '--rigid';
+	push @rvs, '--vertical-label=Ampere';
+	push @rvs, 'TEXTALIGN:left';
+
+	# DS
+	for my $P ( qw ( 1 2 3 ) ) {
+		my $fn = sprintf $rrd_printf, $counter, 'elbasics';
+                my $def = sprintf "DEF:def_I%d=%s:I%d:AVERAGE", $P  ,$fn , $P;
+                push @rvs, $def;
+	}
+
+	# no need to care for direction for bare AC current
+	# but we may like some average line
+	push @rvs, 'CDEF:cdef_Iavg=def_I1,def_I2,def_I3,3,AVG';
+
+
+        for my $P ( qw ( 1 2 3 )  ) {
+		# my $Plabel = 'P' . $P ;
+                my $ln = sprintf "LINE1:def_I%s#%s:%s",  $P ,
+                        $counter_default_colors{  "L$P"}, "I(L$P)"  ;
+			# $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $ln ;
+        }
+
+        for my $P ( qw ( avg )  ) {
+                # my $Plabel = 'P' . $P ;
+                my $ln = sprintf "LINE2:cdef_I%s#%s:%s",  $P ,
+                        $counter_default_colors{ 'total' }, "I avg"  ;
+                        # $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $ln ;
+        }
+
+
+	# zero line 
+	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+        return @rvs ;
+}
+
+#-------------------------------------
 sub subs_power_spec {
  	my $counter = shift;
 
         my @rvs;
-        push @rvs, '--title=Verbrauch pro Zweig' ;
+        push @rvs, '--title=Verbrauch - ' .  $counterlist{ $counter }->{ Label }  ;
         # push @rvs, '--upper-limit=20000';
 	# push @rvs, '--lower-limit=-0.5';
 	# push @rvs, '--rigid';
+	push @rvs, '--vertical-label=Watt';
 	push @rvs, 'TEXTALIGN:left';
 
 	# DS
@@ -135,6 +186,7 @@ sub main_line_spec {
         # push @rvs, '--upper-limit=20000';
         push @rvs, '--lower-limit=-0.5';
         push @rvs, '--rigid';
+	push @rvs, '--vertical-label=kW';
 
 	# Nullinie
 	# push @rvs, 'LINE1:0#000000';
@@ -185,6 +237,7 @@ sub main_area_spec {
 	# push @rvs, '--upper-limit=20000';
 	push @rvs, '--lower-limit=-0.5';
 	push @rvs, '--rigid';
+	push @rvs, '--vertical-label=kW';
 
 	# DEF
 	for my $cnt ( 'mains_d', @_) {
@@ -231,6 +284,7 @@ sub dummy_spec {
 	# return rrdg_lines_ary ($rrd_tpl_mains_stacked);
         my @rvs;
         push @rvs, '--title=Dummy 1' ;
+	push @rvs, '--vertical-label=foo bar';
 	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
 	push @rvs, 'LINE3:1#FF0000::dashes=3,3';
 
@@ -242,6 +296,7 @@ sub dummy2_spec {
 	# return rrdg_lines_ary ($rrd_tpl_mains_lined);
         my @rvs;
         push @rvs, '--title=Dummy 2' ;
+	push @rvs, '--vertical-label=tralala';
         push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
         push @rvs, 'LINE3:-1#00ff00::dashes=3,5';
 
