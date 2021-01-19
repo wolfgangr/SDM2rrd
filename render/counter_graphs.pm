@@ -9,7 +9,7 @@ require './counter_graph_templates.pm';
 
 
 $rrdpath = Cwd::realpath ( '../rrd');
-
+$rrd_printf = $rrdpath .'/mySDM_%s_%s.rrd' ;
 
 # load stored counterlist
 our $counterlist_f = './counterlist.dat';
@@ -19,6 +19,7 @@ our %counterlist;
 my $clp = Storable::retrieve( $counterlist_f );
 %counterlist = %$clp;
 
+my @subs_counters = grep { /subs\d/ } sort  keys %counterlist ;
 
 # should'nt this better be in central counterlist?
 my @target_any = qw ( power energy basics quality ) ;
@@ -28,7 +29,8 @@ our %target_h = (
 ) ;
 
 # all subs# counter get the default
-for my $cnt ( grep { /subs\d/ }  keys %counterlist ) {
+# for my $cnt ( grep { /subs\d/ }  keys %counterlist ) {
+for my $cnt ( @subs_counters ) {
         $target_h{ $cnt } = \@target_any ;
 }
 
@@ -56,7 +58,8 @@ sub graph_spec {
 	my @rvs;
 
 	if ($counter eq 'mains' and  $template eq 'm_stacked' ) {
-		return dummy2_spec() ;
+		return main_area_spec(  @subs_counters ) ;
+		# return dummy2_spec() ;
 	}
 	# @rvs = rrdg_lines_ary ($rrd_tpl_mains_stacked);
 	# return @rvs;
@@ -68,8 +71,42 @@ sub graph_spec {
 
 # 
 sub main_area_spec {
-	my $counterlist = shift;
+	
+	# $rrd_printf 
+	my @rvs;
+	push @rvs, '--title=Verbrauch Summe' ;
+        push @rvs, '--upper-limit=8000';
+        push @rvs, '--lower-limit=-500';
+        push @rvs, '--rigid';
 
+	for my $cnt ( 'mains_d', @_) {
+		my $fn = sprintf $rrd_printf, $cnt, 'totalP';
+		my $def = sprintf "DEF:def_%s=%s:Ptot:AVERAGE", $cnt ,$fn;
+		push @rvs, $def;
+	}
+
+	# prelim hack to revert direction
+	# push @rvs,  'CDEF:cdef_subs1=def_subs1',
+	for my $cnt ('mains_d' , @_) {
+		# my $dcef = sprintf "CDEF:cdef_%s=0,def_%s,-", $cnt, $cnt;
+		my $cdef = sprintf "CDEF:cdef_%s=def_%s", $cnt, $cnt;
+		push @rvs, $cdef;
+	}
+	
+	for my $cnt (@_) {
+		my $area = sprintf "AREA:cdef_%s#%s:%s", $cnt,
+			$counter_default_colors{ $cnt } , 'XYZ' ;
+			# $counterlis{ $cnt }->{ label } ;
+		push @rvs, $area ;
+	}
+	for my $cnt ('mains_d') {
+		my $line = sprintf "LINE:cdef_%s#%s:%s", $cnt,
+			$counter_default_colors{ $cnt } , 'Gesamt' ;
+		push @rvs, $line ;
+	}
+
+
+	return @rvs ;
 }
 
 #~~~~~~~~~~~~~~~~~~~~ helper subs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
