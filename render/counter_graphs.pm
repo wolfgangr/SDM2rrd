@@ -65,6 +65,7 @@ sub graph_spec {
         if ($counter eq 'mains' and  $template eq 'm_lined' ) 	   { return main_line_spec(  @subs_counters ) ; }
 	if ( $template eq 'power') 	{ return subs_power_spec ($counter) ; }	
 	if ( $template eq 'basics')      { return subs_basics_spec ($counter) ; }	 
+	if ( $template eq 'quality')      { return subs_quality_spec ($counter) ; }
 
 	# @rvs = rrdg_lines_ary ($rrd_tpl_mains_stacked);
 	# return @rvs;
@@ -73,7 +74,35 @@ sub graph_spec {
 	return dummy_spec() ;
 }
 
+#----------------------------------------
+sub subs_quality_spec {
+        my $counter = shift;
 
+        my @rvs;
+        push @rvs, '--title=Störungsanalyse - ' .  $counterlist{ $counter }->{ Label }  ;
+        # push @rvs, '--upper-limit=20000';
+        # push @rvs, '--lower-limit=-0.5';
+        # push @rvs, '--rigid';
+        push @rvs, '--vertical-label=wtf';
+        push @rvs, 'TEXTALIGN:left';
+
+	# DS
+	for my $P ( qw ( 1 2 3 tot ) ) {
+	   for my $prm ( qw ( VAr thdI thdU )) {
+		my $fn = sprintf $rrd_printf, $counter, 'elquality';
+		my $tag = $prm . $P ;
+                my $def = sprintf "DEF:def_%s=%s:%s:AVERAGE", $tag, $fn , $tag    ; # $P  ,$fn , $P;
+                push @rvs, $def;
+	   }
+	}
+
+
+	# zero line
+	push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+        return @rvs ;
+
+
+}
 
 
 #-------------------------------------
