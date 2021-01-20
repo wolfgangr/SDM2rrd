@@ -55,7 +55,9 @@ my $selected = (param('select') )  ||    (param('select_previous') )    ||  'mai
 
 my @targets = @{$target_h{ $selected  }} ;
 
-debug (\%target_h, \@targets );
+our $debug = param('debug') ? 1 : 0 ;  # we can feed this as GET variable aka ...url.pl?debug=1
+
+debug (\%target_h, \@targets ) if $debug ;
 
 my $navigator = "\n" ;
 # $navigator .=  start_form  ;
@@ -72,7 +74,10 @@ for my $cnt (@counter_tags_sorted) {
 	$navigator .= " \n" ;
 
 }
+# memorize some state - selection and debug
 $navigator .= sprintf '<input type="hidden" name="select_previous" value="%s">', $selected ; 
+$navigator .= sprintf '<input type="hidden" name="debug" value="%s">', $debug ;
+
 
 # $navigator .=  end_form  . "\n" ;  
 
@@ -231,8 +236,10 @@ for my $target (@targets) {
   my @tail = graph_spec ($selected, $target);
   push @rrdg_array ,  @tail ;
 
+if ($debug) {
   debug ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
   debug (\@rrdg_array, $selected, $target );
+}
 
   # my ($result_arr,$xsize,$ysize)  = RRDs::graph($rrdg_string);
   my $res_hash = RRDs::graph( @rrdg_array  );
