@@ -65,6 +65,7 @@ sub graph_spec {
         if ($counter eq 'mains' and  $template eq 'm_lined' ) 	   { return main_line_spec(  @subs_counters ) ; }
 	if ( $template eq 'power') 	{ return subs_power_spec ($counter) ; }	
 	if ( $template eq 'basics')      { return subs_basics_spec ($counter) ; }	 
+	if ( $template eq 'energy')      { return subs_energy_spec ($counter) ; }
 	if ( $template eq 'quality')      { return subs_quality_spec ($counter) ; }
 
 	# @rvs = rrdg_lines_ary ($rrd_tpl_mains_stacked);
@@ -194,6 +195,45 @@ sub subs_basics_spec {
 }
 
 #-------------------------------------
+
+sub subs_energy_spec {
+        my $counter = shift;
+
+        my @rvs;
+        push @rvs, '--title=Zählerstand - ' .  $counterlist{ $counter }->{ Label }  ;
+        # push @rvs, '--upper-limit=20000';
+        # push @rvs, '--lower-limit=-0.5';
+        # push @rvs, '--rigid';
+        push @rvs, '--vertical-label=kWh';
+        push @rvs, 'TEXTALIGN:left';
+
+	# DEF
+	for my $P ( qw ( 1 2 3 tot ) ) {
+                my $fn = sprintf $rrd_printf, $counter, 'E_unidir'; ### TODO for bidirs!
+                my $def = sprintf "DEF:def_E%s=%s:E%s_sld:AVERAGE", $P ,$fn, 
+			( $P ne 'tot' ) ? $P : '';
+                push @rvs, $def;
+        }
+
+	# shift to zero start
+	for my $P ( qw( 1 2 3 tot)  ) {
+		# my $dir = $counterlist{ $counter }->{ direction } ;
+		# my $rpn = '1000,/,' . $dir . ',*,' ;
+		# my $rpnv =   ',FIRST'  ;
+                my $vdef = sprintf "VDEF:E%s_offs=def_E%s,FIRST", $P, $P  ;
+		# my $rpnc =   ',-'  ;
+		my $cdef = sprintf "CDEF:E%s_plot=def_E%s,E%s_offs,-", $P, $P, $P  ;
+                push @rvs, $vdef, $cdef;
+        }
+
+        # zero line
+        push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
+        return @rvs ;
+
+}
+
+#-------------------------------------
+
 sub subs_power_spec {
  	my $counter = shift;
 
