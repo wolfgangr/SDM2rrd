@@ -121,7 +121,7 @@ sub subs_quality_spec {
 		my $clr_idx = ($P eq 'tot') ? 'total' : 'L'.$P ; # color index
 
 		# my $dashing =  ($prm eq 'thdI' ) ? '3,2' :  '1,4'  ; 
-		my $dashing = '';   ':dashes'  ;
+		my $dashing = '';  #  ':dashes'  ;
 		$dashing .= ':dashes=3,2' if ($prm eq 'thdI' );
 		$dashing .= ':dashes=1,4' if ($prm eq 'thdU' );
 
@@ -202,8 +202,8 @@ sub subs_energy_spec {
         my @rvs;
         push @rvs, '--title=Zählerstand - ' .  $counterlist{ $counter }->{ Label }  ;
         # push @rvs, '--upper-limit=20000';
-        # push @rvs, '--lower-limit=-0.5';
-        # push @rvs, '--rigid';
+        push @rvs, '--lower-limit=-1';
+        push @rvs, '--rigid';
         push @rvs, '--vertical-label=kWh';
         push @rvs, 'TEXTALIGN:left';
 
@@ -225,6 +225,24 @@ sub subs_energy_spec {
 		my $cdef = sprintf "CDEF:E%s_plot=def_E%s,E%s_offs,-", $P, $P, $P  ;
                 push @rvs, $vdef, $cdef;
         }
+
+	# plot
+	for my $P ( qw ( 1 2 3  )  ) {
+		# my $Plabel = 'P' . $P ;
+                my $ln = sprintf "AREA:E%s_plot#%s:%s:STACK",  $P ,
+                        $counter_default_colors{  "L$P"}, "E(L$P)"  ;
+			# $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $ln ;
+        }
+        for my $P ( qw ( tot  )  ) {
+                # my $Plabel = 'P' . $P ;
+                my $ln = sprintf "LINE2:E%s_plot#%s:%s",  $P ,
+                        $counter_default_colors{ total }, "E(gesamt)"  ;
+                        # $counterlist{ $cnt }->{ Label } ;
+                push @rvs, $ln ;
+        }
+
+
 
         # zero line
         push @rvs, 'LINE1:0#000000::dashes=1,4,5,4';
