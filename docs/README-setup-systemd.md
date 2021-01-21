@@ -211,6 +211,15 @@ Restart, kill jobs, watch logging coming up again, be happy.
 That's the way undead demons are supposed to behave :-)   
 
 
+## reset USB serial device
+
+Sometimes the reason for log failure is the USB dongle.
+We cannot physically unplug it, but we hope that we can do such a thing in software.
+
+see this [blog entry](https://askubuntu.com/questions/645/how-do-you-reset-a-usb-device-from-the-command-line ) and find the usbreset.c
+Compile and put to /usr/local/bin (or wherever you prefer).
+Add sudo privileges fot this command w/o password.
+Test.  Enjoy.
 
 
 

@@ -3,26 +3,29 @@
 # systemd starter script
 
 UPDLOG='/var/log/wrosner/counter_Modbus.log'
-
+DEVICE='/home/wrosner/infini/dev_infini_modbus/';
 
 SCRIPTDIR=`dirname "$0"`
 # echo $SCRIPTDIR
 cd $SCRIPTDIR
+
+
+
+# like unplugging / replugging
+./reset_ttyUSB.pl $DEVICE
+sleep 2
+
 cd ..
+
+./setstty-RS485.sh  >> $UPDLOG
 
 # spawn our associated babysitter
 ./watchdogInfini_systemd.pl &
 
-# not sure what environment we get from systemd
-# source /etc/profile
-# source ~/.profile
-# echo $PATH
-# pwd
-# launch the real thing
-# ./USR-SDM-Poller.pl > /dev/null
 
-# we have a 2 staged setting, connected by message queue
-# try to give the consumer time to pull off stuff of the queue  if there
+
+
+
 # infini-SDM-MODBUS-sniffer.pl
 ./mqsv-SDM2rrd.pl 2>> $UPDLOG 1>> /dev/null   &
 # ./mqsv-SDM2rrd.pl & 
